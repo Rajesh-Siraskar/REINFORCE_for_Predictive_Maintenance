@@ -1,0 +1,13 @@
+PHM_C06_0.13_weighted
+Date,Time,Environment,Noise,Breakdown_chance,Train_data,Wear threshold,Episodes,Test_info,Test_cases,Metrics_method
+12-May-2023,18:33:26,PHM 2010. Complex multi-state env.,None,0,data\PHM_C06_MultiStateEnv_0p13.csv,0.13,1000,Sampled from training data,40,weighted
+
+,Wtd_Precision,Wtd_Recall,F_Beta_0_5,F_Beta_0_75,F_1_Score,Normal_error,Replace_error,Overall_error
+,mean,mean,mean,mean,mean,mean,mean,mean
+Algorithm,,,,,,,,
+A2C,0.4941,0.47,0.4831,0.4767,0.4727,0.5213,0.5442,0.53
+DQN,0.4913,0.585,0.4285,0.4378,0.4572,0.0251,0.9689,0.415
+PPO,0.5938,0.51,0.5551,0.5332,0.5196,0.5493,0.3771,0.49
+REINFORCE,0.4051,0.635,0.4365,0.4654,0.4941,0.0,1.0,0.365
+
+
