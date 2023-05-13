@@ -110,7 +110,7 @@ class MillingTool_MS(gym.Env):
 
             # Based on the action = 1 replace the tool or if 0, continue with normal operation
             if action:
-                reward += -10.0
+                reward += -100.0
                 # We replace the tool - so roll back tool life. -1 so that the increment in df_index will reset it to 0
                 self.df_index = -1
                 self.ep_tool_replaced += 1

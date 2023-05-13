@@ -1,4 +1,0 @@
-PHM expts. -- Complex env - No noise. 1k eps
-1. C06: V_PHM_C06_0.12_weighted_metrics_12-May-2023_18_46_08
-2. C04: V_8_4_PHM_0.1_weighted_metrics_12-May-2023_17_46_23
-3. C01: V_PHM_C01_0.11_weighted_metrics_12-May-2023_19_34_18
