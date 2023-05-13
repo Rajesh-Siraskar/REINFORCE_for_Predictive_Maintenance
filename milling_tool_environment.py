@@ -29,7 +29,8 @@ class MillingTool_MS(gym.Env):
 
     metadata = {"render.modes": ["human"]}
     
-    def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance):        
+    def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance):
+        print(f'\n** -- MULTI-VARIABLE STATE. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **\n')
 
         # Machine data frame properties    
         self.df = df
@@ -109,7 +110,7 @@ class MillingTool_MS(gym.Env):
 
             # Based on the action = 1 replace the tool or if 0, continue with normal operation
             if action:
-                reward += -100.0
+                reward += -10.0
                 # We replace the tool - so roll back tool life. -1 so that the increment in df_index will reset it to 0
                 self.df_index = -1
                 self.ep_tool_replaced += 1
@@ -179,12 +180,13 @@ class MillingTool_MS(gym.Env):
 ## 1. Random tool breakdown after crossing 30% of wear threshold
 ## 2. Random white noise added to wear
 
-class MillingTool_V2(gym.Env):
+class MillingTool_SS(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
 
     metadata = {"render.modes": ["human"]}
     
-    def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance):        
+    def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance):
+        print(f'\n** -- Simple single variable state. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
         # Machine data frame properties    
         self.df = df
@@ -285,7 +287,7 @@ class MillingTool_V2(gym.Env):
     def _get_observation(self, index):
         next_state = np.array([
             self.df['time'][index],
-            self.df['VB_mm'][index]
+            self.df['tool_wear'][index]
         ], dtype=np.float32)
                 
         return next_state

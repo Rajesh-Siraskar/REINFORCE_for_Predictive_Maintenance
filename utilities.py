@@ -180,7 +180,7 @@ def two_variable_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='',
     plt.savefig(filename)
     plt.show()  
 
-def two_axes_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='', xticks=0,threshold=0.0):
+def two_axes_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold=0.0):
     # Plot Line1 (Left Y Axis)
     fig, ax1 = plt.subplots(1,1,figsize=(10, 4), dpi= 80)
     ax1.plot(x, y1, color='tab:orange', linewidth=2)
@@ -207,7 +207,7 @@ def two_axes_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='', xti
     ax2.set_xticklabels(x[::xticks], rotation=90, fontdict={'fontsize':10})
     ax2.set_title(title, fontsize=18)
     fig.tight_layout()
-    plt.savefig('Wear_Plot.png')
+    plt.savefig(file)
     plt.show()
     
 def plot_error_bounds(x, y):

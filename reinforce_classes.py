@@ -56,6 +56,14 @@ class PolicyNetwork(nn.Module):
             nn.ReLU(),
             nn.Linear(64, output_dim),
         ]
+            
+        # layers = [
+        #     nn.Linear(input_dim, 128),
+        #     nn.ReLU(),
+        #     nn.Linear(128, 64),
+        #     nn.ReLU(),
+        #     nn.Linear(64, output_dim),
+        # ]
         
         # 1.3. Assemble the network and this becomes our "model" i.e function approximation (i.e. "model") 
         self.model = nn.Sequential(*layers)
