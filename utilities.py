@@ -15,12 +15,20 @@ def downsample(file, sample_rate):
     print(f'- Down-sampled to {len(df_downsampled.index)} rows.')
     return(df_downsampled)
 
-def compute_metrics(df):
+def compute_metrics_all(df):
     metrics = df.groupby(['Algorithm']).agg({'Wtd_Precision': ['mean','std'], 'Wtd_Recall': ['mean','std'], 
                                              'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
                                              'Normal_cases': ['mean'], 'Normal_error': ['mean','std'],
                                              'Replace_cases': ['mean'], 'Replace_error': ['mean','std'],
                                              'Overall_error': ['mean','std']})
+    return(metrics)
+
+def compute_metrics(df):
+    metrics = df.groupby(['Algorithm']).agg({'Wtd_Precision': ['mean','std'], 'Wtd_Recall': ['mean','std'], 
+                                             'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
+                                             'Normal_cases': ['mean'], 'Normal_error': ['mean'],
+                                             'Replace_cases': ['mean'], 'Replace_error': ['mean'],
+                                             'Overall_error': ['mean']})
     return(metrics)
 
 def compute_metrics_simple(df):
@@ -111,7 +119,6 @@ def test_script(method, training_round, df, algo, episodes, env, env_info, agent
 
 
 
-
 def plot_learning_curve(x, rewards_history, loss_history, moving_avg_n, filename):
     fig = plt.figure()
     plt.figure(figsize=(10, 4))
@@ -138,7 +145,8 @@ def plot_learning_curve(x, rewards_history, loss_history, moving_avg_n, filename
     plt.savefig(filename)
     plt.show()
         
-def single_axes_plot(x, y, title='', x_label='', y_label='', xticks=0, threshold=0.0, filename='plot.png'):
+def single_axes_plot(x, y, title='', subtitle='', x_label='', y_label='', xticks=0, threshold=0.0, filename='plot.png'):
+    
     # Plot y
     fig, ax = plt.subplots(1, 1, figsize=(10, 4), dpi= 80)
     ax.plot(x, y, color='tab:blue', linewidth=2)
@@ -154,12 +162,15 @@ def single_axes_plot(x, y, title='', x_label='', y_label='', xticks=0, threshold
         ax.grid(alpha=.4)
     ax.set_xticks(np.arange(0, len(x), xticks))
     ax.set_xticklabels(x[::xticks], rotation=90, fontdict={'fontsize':10})
-    ax.set_title(title, fontsize=18)
+    plt.suptitle(title, fontsize=16, fontweight="bold", x=0.02, y=0.96, ha="left")
+    plt.title(subtitle, fontsize=10, pad=10, loc="left")
+    # ax.set_title(title, fontsize=18)
+    # plt.title(subtitle)
     fig.tight_layout()
     plt.savefig(filename)
     plt.show()
 
-def two_variable_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='', xticks=0, filename='plot.png'):
+def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, filename='plot.png'):
     # Plot Line1 (Left Y Axis)
     fig, ax = plt.subplots(1,1,figsize=(10, 4), dpi= 80)
     ax.plot(x, y1, color='tab:green', alpha=0.7, linewidth=0.5)
@@ -173,14 +184,16 @@ def two_variable_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='',
     ax.grid(alpha=.4)
     ax.set_xticks(np.arange(0, len(x), xticks))
     ax.set_xticklabels(x[::xticks], rotation=90, fontdict={'fontsize':10})
-    ax.set_title(title, fontsize=18)
+    plt.suptitle(title, fontsize=16, fontweight="bold", x=0.02, y=0.96, ha="left")
+    plt.title(subtitle, fontsize=10, pad=10, loc="left")
+    # ax.set_title(title, fontsize=18)
     ax.legend(['Rewards', 'Moving avg.'])
     
     fig.tight_layout()
     plt.savefig(filename)
     plt.show()  
 
-def two_axes_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold=0.0):
+def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold=0.0):
     # Plot Line1 (Left Y Axis)
     fig, ax1 = plt.subplots(1,1,figsize=(10, 4), dpi= 80)
     ax1.plot(x, y1, color='tab:orange', linewidth=2)
@@ -205,6 +218,8 @@ def two_axes_plot(x, y1, y2, title='', x_label='', y1_label='', y2_label='', xti
     ax2.tick_params(axis='y', labelcolor='tab:blue')
     ax2.set_xticks(np.arange(0, len(x), xticks))
     ax2.set_xticklabels(x[::xticks], rotation=90, fontdict={'fontsize':10})
+    # plt.suptitle(title, fontsize=16, fontweight="bold", x=0.02, y=0.96, ha="left")
+    # plt.title(subtitle, fontsize=10, pad=10, loc="left")
     ax2.set_title(title, fontsize=18)
     fig.tight_layout()
     plt.savefig(file)
@@ -224,3 +239,18 @@ def plot_error_bounds(x, y):
     plt.margins(x=0)
     plt.legend(['Rewards'])
     plt.show()
+    
+# # DOWN SAMPLE HIGH RES DATA
+# WEAR_THRESHOLD = 0.1
+# DATA_FILE = 'data\PHM_C04_MultiStateEnv.csv'
+# SAVE_TO = 'data\PHM_C04_MultiStateEnv_DS.csv'
+# df = pd.read_csv(DATA_FILE)
+# df_downsampled = downsample(DATA_FILE, 10)
+# df_downsampled.to_csv(SAVE_TO, index=False)
+
+# # Visualize the data
+# n_records = len(df_downsampled.index)
+# x = [n for n in range(n_records)]
+# y1 = df_downsampled['tool_wear'].values.tolist()
+# y2 = df_downsampled['ACTION_CODE'].values.tolist()
+# two_axes_plot(x, y1, y2, title='Tool Wear (mm) data', x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, threshold=WEAR_THRESHOLD)
