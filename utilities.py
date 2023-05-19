@@ -26,9 +26,7 @@ def compute_metrics_all(df):
 def compute_metrics(df):
     metrics = df.groupby(['Algorithm']).agg({'Wtd_Precision': ['mean','std'], 'Wtd_Recall': ['mean','std'], 
                                              'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
-                                             'Normal_cases': ['mean'], 'Normal_error': ['mean'],
-                                             'Replace_cases': ['mean'], 'Replace_error': ['mean'],
-                                             'Overall_error': ['mean']})
+                                             'Normal_error': ['mean'], 'Replace_error': ['mean'], 'Overall_error': ['mean']})
     return(metrics)
 
 def compute_metrics_simple(df):
