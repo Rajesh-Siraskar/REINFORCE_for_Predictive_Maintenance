@@ -7,16 +7,29 @@ from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 import datetime
 
-def downsample(file, sample_rate):
-    import pandas as pd
-    df = pd.read_csv(file)
+def lnoise(add_noise, breakdown_chance):
+    if add_noise == 1e3 and breakdown_chance == 0.05:
+        l = 'LowNBD'
+    elif add_noise == 1e2  and breakdown_chance == 0.10:
+        l = 'HighNBD'
+    elif add_noise <= 0 and breakdown_chance == 0:
+        l = 'NoNBD'
+    else:
+        l = 'ArbNBD'
+    return (l)    
+
+
+def downsample(df, sample_rate):
+    # import pandas as pd
+    # df = pd.read_csv(file)
     print(f'- Input data records: {len(df.index)}.\n- Sampling rate: {sample_rate}\n- Expected rows {round(len(df.index)/sample_rate)}')
     df_downsampled = df.iloc[::sample_rate, :]
+    
     print(f'- Down-sampled to {len(df_downsampled.index)} rows.')
     return(df_downsampled)
 
 def compute_metrics_all(df):
-    metrics = df.groupby(['Algorithm']).agg({'Wtd_Precision': ['mean','std'], 'Wtd_Recall': ['mean','std'], 
+    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean','std'], 'Recall': ['mean','std'], 
                                              'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
                                              'Normal_cases': ['mean'], 'Normal_error': ['mean','std'],
                                              'Replace_cases': ['mean'], 'Replace_error': ['mean','std'],
@@ -24,13 +37,13 @@ def compute_metrics_all(df):
     return(metrics)
 
 def compute_metrics(df):
-    metrics = df.groupby(['Algorithm']).agg({'Wtd_Precision': ['mean','std'], 'Wtd_Recall': ['mean','std'], 
+    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean','std'], 'Recall': ['mean','std'], 
                                              'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
                                              'Normal_error': ['mean'], 'Replace_error': ['mean'], 'Overall_error': ['mean']})
     return(metrics)
 
 def compute_metrics_simple(df):
-    metrics = df.groupby(['Algorithm']).agg({'Wtd_Precision': ['mean'], 'Wtd_Recall': ['mean'], 
+    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean'], 'Recall': ['mean'], 
                                              'F_Beta_0_5': ['mean'], 'F_Beta_0_75': ['mean'], 'F_1_Score': ['mean'],
                                              'Normal_error': ['mean'],'Replace_error': ['mean'], 'Overall_error': ['mean']})
     return(metrics)
@@ -141,7 +154,7 @@ def plot_learning_curve(x, rewards_history, loss_history, moving_avg_n, filename
     ax2.yaxis.set_label_position('right')
     ax2.tick_params(axis='y', colors='C1')
     plt.savefig(filename)
-    plt.show()
+    ### plt.show()
         
 def single_axes_plot(x, y, title='', subtitle='', x_label='', y_label='', xticks=0, threshold=0.0, filename='plot.png'):
     
@@ -166,7 +179,7 @@ def single_axes_plot(x, y, title='', subtitle='', x_label='', y_label='', xticks
     # plt.title(subtitle)
     fig.tight_layout()
     plt.savefig(filename)
-    plt.show()
+    ### plt.show()
 
 def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, filename='plot.png'):
     # Plot Line1 (Left Y Axis)
@@ -189,7 +202,7 @@ def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='',
     
     fig.tight_layout()
     plt.savefig(filename)
-    plt.show()  
+    ### plt.show()  
 
 def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold=0.0):
     # Plot Line1 (Left Y Axis)
@@ -221,7 +234,7 @@ def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_
     ax2.set_title(title, fontsize=18)
     fig.tight_layout()
     plt.savefig(file)
-    plt.show()
+    ### plt.show()
     
 def plot_error_bounds(x, y):
     import seaborn as sns
@@ -236,7 +249,7 @@ def plot_error_bounds(x, y):
     fill = plt.fill_between(x, y-sd, y+sd, color='b', alpha=0.2)
     plt.margins(x=0)
     plt.legend(['Rewards'])
-    plt.show()
+    ### plt.show()
     
 # # DOWN SAMPLE HIGH RES DATA
 # WEAR_THRESHOLD = 0.1
