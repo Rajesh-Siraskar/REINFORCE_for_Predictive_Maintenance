@@ -3,7 +3,8 @@
 
 # ## Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
 # Ver.10.0 Auto Experiment
-
+print ('\n ====== REINFORCE for Predictive Maintenance. Automated Experiments V.10. ====== \n')
+print ('- Loading packages...')
 import datetime
 import numpy as np
 import pandas as pd
@@ -18,6 +19,7 @@ from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_
 from reinforce_classes import PolicyNetwork, Agent
 
 # Auto experiment file structure
+print ('- Loading Experiments...')
 df_expts = pd.read_csv('Experiments.csv')
 n_expts = len(df_expts.index)
 
@@ -48,7 +50,7 @@ for n_expt in range(n_expts):
     ## Read data
     df = pd.read_csv(DATA_FILE)
     n_records = len(df.index)
-    VERSION = f'{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{WEAR_THRESHOLD}_{EPISODES}_{MILLING_OPERATIONS_MAX}'
+    VERSION = f'{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{WEAR_THRESHOLD}_{THRESHOLD_FACTOR}_{R3}_{EPISODES}_{MILLING_OPERATIONS_MAX}_'
     print(f'\n [{dt_t}] Experiment {n_expt}: {VERSION}')
 
     METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’}
@@ -62,7 +64,7 @@ for n_expt in range(n_expts):
     RESULTS_FILE = f'{RESULTS_FOLDER}/{VERSION}_test_results_{dt_d}_{dt_m}.csv'
     METRICS_FILE = f'{RESULTS_FOLDER}/{VERSION}_metrics.csv'
 
-    print('\n -- Columns added to results file ', RESULTS_FILE)
+    print('\n- Columns added to results file: ', RESULTS_FILE)
     results = ['Date', 'Time', 'Round', 'Environment', 'Training_data', 'Wear_Threshold', 'Test_data', 'Algorithm', 'Episodes', 'Normal_cases', 'Normal_error',
                'Replace_cases', 'Replace_error', 'Overall_error',
                'Precision', 'Recall', 'F_Beta_0_5', 'F_Beta_0_75', 'F_1_Score']
@@ -88,7 +90,7 @@ for n_expt in range(n_expts):
     WEAR_THRESHOLD_NORMALIZED = THRESHOLD_FACTOR*(WEAR_THRESHOLD-WEAR_MIN)/(WEAR_MAX-WEAR_MIN)
     df_normalized = (df-df.min())/(df.max()-df.min())
     df_normalized['ACTION_CODE'] = df['ACTION_CODE']
-    print(f'Tool wear data imported ({len(df.index)} records). WEAR_THRESHOLD_NORMALIZED: {WEAR_THRESHOLD_NORMALIZED:4.3f}')
+    print(f'- Tool wear data imported ({len(df.index)} records).')
 
     # 4. Split into train and test
     df_train = downsample(df_normalized, 100)
@@ -99,7 +101,7 @@ for n_expt in range(n_expts):
     df_test.to_csv('TempTest.csv')
     df_test = pd.read_csv('TempTest.csv')
 
-    print(f'\n Tool wear data split into train ({len(df_train.index)} records) and test ({len(df_test.index)} records).\n WEAR_THRESHOLD_NORMALIZED: {WEAR_THRESHOLD_NORMALIZED:4.3f}')
+    print(f'- Tool wear data split into train ({len(df_train.index)} records) and test ({len(df_test.index)} records).')
 
     n_records = len(df_train.index)
     x = [n for n in range(n_records)]
@@ -120,6 +122,7 @@ for n_expt in range(n_expts):
 
     # ## REINFORCE RL Algorithm
     ### Main loop
+    print('\n* Train REINFORCE model...')
     rewards_history = []
     loss_history = []
     training_stats = []
@@ -188,7 +191,7 @@ for n_expt in range(n_expts):
     # Process results
     # eps = [i for i in range(EPISODES)]
     # store_results(RF_TRAINING_FILE, training_round, eps, rewards_history, env.ep_tool_replaced_history)
-    print('- REINFORCE model trained.')
+    print('- Test REINFORCE model...')
     # print(80*'-')
     # print(f'Algorithm\tNormal\terr.%\tReplace\terr.%\tOverall err.%')
     # print(80*'-')
@@ -205,6 +208,7 @@ for n_expt in range(n_expts):
     print(f'- REINFORCE Test results written to file: {RESULTS_FILE}.\n')
 
     # ## Stable-Baselines Algorithms
+    print('\n* Train Stable-Baselines-3 A2C, DQN and PPO models...')
 
     algos = ['A2C','DQN','PPO']
     SB_agents = []
@@ -214,13 +218,13 @@ for n_expt in range(n_expts):
         if SB_ALGO.upper() == 'DQN': agent_SB = DQN('MlpPolicy', env)
         if SB_ALGO.upper() == 'PPO': agent_SB = PPO('MlpPolicy', env)
 
-        print(f'- Training and Testing Stable-Baselines-3 {SB_ALGO} algorithm.')
+        print(f'- Training Stable-Baselines-3 {SB_ALGO} algorithm...')
         agent_SB.learn(total_timesteps=EPISODES)
         SB_agents.append(agent_SB)
 
     n = 0
     for agent_SB in SB_agents:
-        print(f'- Testing Stable-Baselines-3 {agent_SB}.')
+        print(f'- Testing Stable-Baselines-3 {SB_ALGO} model...')
         # print(80*'-')
         # print(f'Algo.\tNormal\tErr.%\tReplace\tErr.%\tOverall err.%')
         # print(80*'-')
@@ -236,7 +240,7 @@ for n_expt in range(n_expts):
 
     ### Create a consolidated algorithm wise metrics summary
 
-    print(f'- Algorithm level consolidated metrics being reported to file: {METRICS_FILE}.')
+    print(f'* Test Report: Algorithm level consolidated metrics will be written to: {METRICS_FILE}.')
 
     header_columns = [VERSION]
     write_test_results(header_columns, METRICS_FILE)
@@ -266,6 +270,6 @@ for n_expt in range(n_expts):
     write_test_results([120*'-'], CONSOLIDATED_METRICS_FILE) # leave a blank line
     print(f'- {CONSOLIDATED_METRICS_FILE} file updated.')
     print(algo_metrics.round(3))
-    print('- End Experiment {n_expt}.\n')
+    print(f'- End Experiment {n_expt}.\n')
 
 print('\n\n ================= END OF PROGRAM =================')

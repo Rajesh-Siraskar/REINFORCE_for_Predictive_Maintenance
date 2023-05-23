@@ -23,7 +23,7 @@ def downsample(df, sample_rate):
     # import pandas as pd
     # df = pd.read_csv(file)
     df_downsampled = df.iloc[::sample_rate, :]
-    print(f'- Input data records: {len(df.index)}. Sampling rate: {sample_rate}. Expected rows {round(len(df.index)/sample_rate)}. Down-sampled to {len(df_downsampled.index)} rows.')
+    print(f'- Down-sampling. Input data records: {len(df.index)}. Sampling rate: {sample_rate}. Expected rows {round(len(df.index)/sample_rate)}. Down-sampled to {len(df_downsampled.index)} rows.')
     return(df_downsampled)
 
 def compute_metrics_all(df):

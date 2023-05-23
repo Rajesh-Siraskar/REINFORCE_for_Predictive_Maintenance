@@ -17,7 +17,7 @@
 # TO-DO - Re-factor MillingTool_V1 on lines of MillingTool_V2
 # V 3.0 - Env. version 3.0 -- PHM multi-state environment
 # V 3.2 - Env. version 3.0 -- PHM multi-state environment
-# V 3.90 - R +1*indx, -1.2*idx and -2.0*idx > Rep error (0.13) reduced but high normal error (0.8). F-1 0.471:  
+# V 3.90 - R +1*indx, -1.2*idx and -2.0*idx > Rep error (0.13) reduced but high normal error (0.8). F-1 0.471:
 # V 3.91 - R +1*indx, -1.2*idx and -4.0**idx > Error Rep: 0.00 Normal: 0.98 F-1 0.355
 # V 3.92 - R +1*indx, -1.2*idx and -4.0*idx > Error Rep: 0.00 Normal: 1.0 F-1 0.33
 # V 3.93 - R +1*indx, -1.2*idx and -1.0*idx > Error Rep: 0.00 Normal: 1.0 F-1 0.33
@@ -35,16 +35,16 @@ class MillingTool_MS_V3(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
 
     metadata = {"render.modes": ["human"]}
-    
-    def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
-        print(f'\n** -- Multi-variate state V3 env. R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **\n')
 
-        # Machine data frame properties    
+    def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
+        print(f'** -- Multi-variate state V3 env. R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
+
+        # Machine data frame properties
         self.df = df
         self.df_length = len(self.df.index)
         self.df_index = 0
-        
-        # Milling operation and tool parameters 
+
+        # Milling operation and tool parameters
         self.wear_threshold = wear_threshold
         self.max_operations = max_operations
         self.breakdown_chance = breakdown_chance
@@ -61,25 +61,25 @@ class MillingTool_MS_V3(gym.Env):
         self.ep_rewards_history = []
         self.ep_length_history = []
         self.ep_tool_replaced_history = []
-        
+
         ## Gym interface Obsercation and Action spaces
         # All features are normalized [0, 1]
         self.min_feature = 0.0
         self.max_feature = 1.0
-        
-        # Define state and action limits        
-        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature, 
+
+        # Define state and action limits
+        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature,
                                    self.min_feature, self.min_feature, self.min_feature,
                                    self.min_feature, self.min_feature], dtype=np.float32)
-        
-        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature, 
+
+        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature,
                                     self.max_feature, self.max_feature, self.max_feature,
                                     self.max_feature, self.max_feature], dtype=np.float32)
-        
+
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
-             
+
     def step(self, action):
         """
         Args: action. Discrete - 1=Replace tool, 0=Continue milling operation
@@ -88,27 +88,27 @@ class MillingTool_MS_V3(gym.Env):
         # Get current observation from environment
         self.state = self._get_observation(self.df_index)
         tool_wear = self.state[0]
-        
+
         # Add white noise for robustness
         # if self.add_noise:
         #     tool_wear += np.random.rand()/self.add_noise
-        
+
         # Termination condition
         if self.ep_length >= self.max_operations:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Max. milling operations crossed'}
-            
+
         elif tool_wear > self.wear_threshold and np.random.uniform() < self.breakdown_chance:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Tool breakdown'}
-            
+
         else:
             terminated = False
-            info = {'action':'Continue'} 
+            info = {'action':'Continue'}
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
@@ -131,7 +131,7 @@ class MillingTool_MS_V3(gym.Env):
 
             # Post process of step: Get next observation, fill history arrays
             self.ep_length += 1
-            
+
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
                 info = {'data_index':'Data over'}
@@ -154,7 +154,7 @@ class MillingTool_MS_V3(gym.Env):
             self.df['vibration_z'][index],
             self.df['acoustic_emission_rms'][index]
         ], dtype=np.float32)
-                
+
         return next_state
 
     def reset(self):
@@ -162,7 +162,7 @@ class MillingTool_MS_V3(gym.Env):
         self.ep_rewards_history.append(self.ep_total_reward)
         self.ep_length_history.append(self.ep_length)
         self.ep_tool_replaced_history.append(self.ep_tool_replaced)
-        
+
         # Reset environment variables and stats.
         self.df_index = 0
         self.reward = 0.0
@@ -174,15 +174,15 @@ class MillingTool_MS_V3(gym.Env):
         self.state = self._get_observation(self.df_index)
         terminated = False
         return np.array(self.state, dtype=np.float32)
-    
+
     def render(self, mode='human', close=False):
         print(f'{self.df_index:>3d} | Ep.Len.: {self.ep_length:>3d} | Reward: {self.reward:>10.4f} | Wear: {wear:>5.4f} | {info}')
-        
+
     def close(self):
         del [self.df]
         gc.collect()
         print('** -- Envoronment closed. Data-frame memory released. Garbage collector invoked successfully -- **')
-        
+
 ## Single variable State V.2.0
 class MillingTool_SS_V3(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
@@ -192,12 +192,12 @@ class MillingTool_SS_V3(gym.Env):
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
         print(f'\n** -- Simple single variable state V3 env.  R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
-        # Machine data frame properties    
+        # Machine data frame properties
         self.df = df
         self.df_length = len(self.df.index)
         self.df_index = 0
-        
-        # Milling operation and tool parameters 
+
+        # Milling operation and tool parameters
         self.wear_threshold = wear_threshold
         self.max_operations = max_operations
         self.breakdown_chance = breakdown_chance
@@ -214,20 +214,20 @@ class MillingTool_SS_V3(gym.Env):
         self.ep_rewards_history = []
         self.ep_length_history = []
         self.ep_tool_replaced_history = []
-        
+
         ## Gym interface Obsercation and Action spaces
         # All features are normalized [0, 1]
         self.min_feature = 0.0
         self.max_feature = 1.0
-        
-        # Define state and action limits        
+
+        # Define state and action limits
         self.low_state = np.array([self.min_feature, self.min_feature], dtype=np.float32)
         self.high_state = np.array([self.max_feature, self.max_feature], dtype=np.float32)
-        
+
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
-             
+
     def step(self, action):
         """
         Args: action. Discrete - 1=Replace tool, 0=Continue milling operation
@@ -237,27 +237,27 @@ class MillingTool_SS_V3(gym.Env):
         self.state = self._get_observation(self.df_index)
         time_step = self.state[0]
         tool_wear = self.state[1]
-        
+
         # Add white noise for robustness
         # if self.add_noise:
         #     tool_wear += np.random.rand()/self.add_noise
-        
+
         # Termination condition
         if self.ep_length >= self.max_operations:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Max. milling operations crossed'}
-            
+
         elif tool_wear > self.wear_threshold and np.random.uniform() < self.breakdown_chance:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Tool breakdown'}
-            
+
         else:
             terminated = False
-            info = {'action':'Continue'} 
+            info = {'action':'Continue'}
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
@@ -280,7 +280,7 @@ class MillingTool_SS_V3(gym.Env):
 
             # Post process of step: Get next observation, fill history arrays
             self.ep_length += 1
-            
+
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
                 info = {'data_index':'Data over'}
@@ -296,7 +296,7 @@ class MillingTool_SS_V3(gym.Env):
             self.df['time'][index],
             self.df['tool_wear'][index]
         ], dtype=np.float32)
-                
+
         return next_state
 
     def reset(self):
@@ -304,7 +304,7 @@ class MillingTool_SS_V3(gym.Env):
         self.ep_rewards_history.append(self.ep_total_reward)
         self.ep_length_history.append(self.ep_length)
         self.ep_tool_replaced_history.append(self.ep_tool_replaced)
-        
+
         # Reset environment variables and stats.
         self.df_index = 0
         self.reward = 0.0
@@ -316,36 +316,36 @@ class MillingTool_SS_V3(gym.Env):
         self.state = self._get_observation(self.df_index)
         terminated = False
         return np.array(self.state, dtype=np.float32)
-    
+
     def render(self, mode='human', close=False):
         print(f'{self.df_index:>3d} | Ep.Len.: {self.ep_length:>3d} | Reward: {self.reward:>10.4f} | Wear: {wear:>5.4f} | {info}')
-        
+
     def close(self):
         del [self.df]
         gc.collect()
         print('** -- Envoronment closed. Data-frame memory released. Garbage collector invoked successfully -- **')
-        
+
 #####################################################################################################################################################
 # VERSION 2.0
 #####################################################################################################################################################
 
 
-## V.4.0: MillingTool_MS_V2 
+## V.4.0: MillingTool_MS_V2
 ## Add reward function elements to init method. R1, R2 and R3
 class MillingTool_MS_V2(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
 
     metadata = {"render.modes": ["human"]}
-    
+
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
         print(f'\n** -- Multi-variate state V2 env. R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **\n')
 
-        # Machine data frame properties    
+        # Machine data frame properties
         self.df = df
         self.df_length = len(self.df.index)
         self.df_index = 0
-        
-        # Milling operation and tool parameters 
+
+        # Milling operation and tool parameters
         self.wear_threshold = wear_threshold
         self.max_operations = max_operations
         self.breakdown_chance = breakdown_chance
@@ -362,26 +362,26 @@ class MillingTool_MS_V2(gym.Env):
         self.ep_rewards_history = []
         self.ep_length_history = []
         self.ep_tool_replaced_history = []
-        
+
         ## Gym interface Obsercation and Action spaces
         # All features are normalized [0, 1]
         self.min_feature = 0.0
         self.max_feature = 1.0
-        
-        # Define state and action limits        
-        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature, 
+
+        # Define state and action limits
+        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature,
                                    self.min_feature, self.min_feature, self.min_feature,
                                    self.min_feature, self.min_feature], dtype=np.float32)
-        
-        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature, 
+
+        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature,
                                     self.max_feature, self.max_feature, self.max_feature,
                                     self.max_feature, self.max_feature], dtype=np.float32)
-        
-        
+
+
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
-             
+
     def step(self, action):
         """
         Args: action. Discrete - 1=Replace tool, 0=Continue milling operation
@@ -390,27 +390,27 @@ class MillingTool_MS_V2(gym.Env):
         # Get current observation from environment
         self.state = self._get_observation(self.df_index)
         tool_wear = self.state[0]
-        
+
         # Add white noise for robustness
         if self.add_noise:
             tool_wear += np.random.rand()/self.add_noise
-        
+
         # Termination condition
         if self.ep_length >= self.max_operations:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Max. milling operations crossed'}
-            
+
         elif tool_wear > self.wear_threshold and np.random.uniform() < self.breakdown_chance:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Tool breakdown'}
-            
+
         else:
             terminated = False
-            info = {'action':'Continue'} 
+            info = {'action':'Continue'}
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
@@ -433,7 +433,7 @@ class MillingTool_MS_V2(gym.Env):
 
             # Post process of step: Get next observation, fill history arrays
             self.ep_length += 1
-            
+
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
                 info = {'data_index':'Data over'}
@@ -456,7 +456,7 @@ class MillingTool_MS_V2(gym.Env):
             self.df['vibration_z'][index],
             self.df['acoustic_emission_rms'][index]
         ], dtype=np.float32)
-                
+
         return next_state
 
     def reset(self):
@@ -464,7 +464,7 @@ class MillingTool_MS_V2(gym.Env):
         self.ep_rewards_history.append(self.ep_total_reward)
         self.ep_length_history.append(self.ep_length)
         self.ep_tool_replaced_history.append(self.ep_tool_replaced)
-        
+
         # Reset environment variables and stats.
         self.df_index = 0
         self.reward = 0.0
@@ -476,10 +476,10 @@ class MillingTool_MS_V2(gym.Env):
         self.state = self._get_observation(self.df_index)
         terminated = False
         return np.array(self.state, dtype=np.float32)
-    
+
     def render(self, mode='human', close=False):
         print(f'{self.df_index:>3d} | Ep.Len.: {self.ep_length:>3d} | Reward: {self.reward:>10.4f} | Wear: {wear:>5.4f} | {info}')
-        
+
     def close(self):
         del [self.df]
         gc.collect()
@@ -495,12 +495,12 @@ class MillingTool_SS_V2(gym.Env):
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
         print(f'\n** -- Simple single variable state V2 env.  R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
-        # Machine data frame properties    
+        # Machine data frame properties
         self.df = df
         self.df_length = len(self.df.index)
         self.df_index = 0
-        
-        # Milling operation and tool parameters 
+
+        # Milling operation and tool parameters
         self.wear_threshold = wear_threshold
         self.max_operations = max_operations
         self.breakdown_chance = breakdown_chance
@@ -517,20 +517,20 @@ class MillingTool_SS_V2(gym.Env):
         self.ep_rewards_history = []
         self.ep_length_history = []
         self.ep_tool_replaced_history = []
-        
+
         ## Gym interface Obsercation and Action spaces
         # All features are normalized [0, 1]
         self.min_feature = 0.0
         self.max_feature = 1.0
-        
-        # Define state and action limits        
+
+        # Define state and action limits
         self.low_state = np.array([self.min_feature, self.min_feature], dtype=np.float32)
         self.high_state = np.array([self.max_feature, self.max_feature], dtype=np.float32)
-        
+
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
-             
+
     def step(self, action):
         """
         Args: action. Discrete - 1=Replace tool, 0=Continue milling operation
@@ -540,27 +540,27 @@ class MillingTool_SS_V2(gym.Env):
         self.state = self._get_observation(self.df_index)
         time_step = self.state[0]
         tool_wear = self.state[1]
-        
+
         # Add white noise for robustness
         if self.add_noise:
             tool_wear += np.random.rand()/self.add_noise
-        
+
         # Termination condition
         if self.ep_length >= self.max_operations:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Max. milling operations crossed'}
-            
+
         elif tool_wear > self.wear_threshold and np.random.uniform() < self.breakdown_chance:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Tool breakdown'}
-            
+
         else:
             terminated = False
-            info = {'action':'Continue'} 
+            info = {'action':'Continue'}
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
@@ -583,7 +583,7 @@ class MillingTool_SS_V2(gym.Env):
 
             # Post process of step: Get next observation, fill history arrays
             self.ep_length += 1
-            
+
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
                 info = {'data_index':'Data over'}
@@ -599,7 +599,7 @@ class MillingTool_SS_V2(gym.Env):
             self.df['time'][index],
             self.df['tool_wear'][index]
         ], dtype=np.float32)
-                
+
         return next_state
 
     def reset(self):
@@ -607,7 +607,7 @@ class MillingTool_SS_V2(gym.Env):
         self.ep_rewards_history.append(self.ep_total_reward)
         self.ep_length_history.append(self.ep_length)
         self.ep_tool_replaced_history.append(self.ep_tool_replaced)
-        
+
         # Reset environment variables and stats.
         self.df_index = 0
         self.reward = 0.0
@@ -619,36 +619,36 @@ class MillingTool_SS_V2(gym.Env):
         self.state = self._get_observation(self.df_index)
         terminated = False
         return np.array(self.state, dtype=np.float32)
-    
+
     def render(self, mode='human', close=False):
         print(f'{self.df_index:>3d} | Ep.Len.: {self.ep_length:>3d} | Reward: {self.reward:>10.4f} | Wear: {wear:>5.4f} | {info}')
-        
+
     def close(self):
         del [self.df]
         gc.collect()
         print('** -- Envoronment closed. Data-frame memory released. Garbage collector invoked successfully -- **')
 
-        
+
 #####################################################################################################################################################
 # VERSION 1.0
 #####################################################################################################################################################
 
-## V3: Add multi-state capability 
+## V3: Add multi-state capability
 # force_x; force_y; force_z; vibration_x; vibration_y; vibration_z; acoustic_emission_rms; tool_wear; ACTION_CODE
 class MillingTool_MS(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
 
     metadata = {"render.modes": ["human"]}
-    
+
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance):
         print(f'\n** -- Multi-variate state. [V.4.0 +1.0*indx, -1.2*idx and -4.0] Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **\n')
 
-        # Machine data frame properties    
+        # Machine data frame properties
         self.df = df
         self.df_length = len(self.df.index)
         self.df_index = 0
-        
-        # Milling operation and tool parameters 
+
+        # Milling operation and tool parameters
         self.wear_threshold = wear_threshold
         self.max_operations = max_operations
         self.breakdown_chance = breakdown_chance
@@ -662,26 +662,26 @@ class MillingTool_MS(gym.Env):
         self.ep_rewards_history = []
         self.ep_length_history = []
         self.ep_tool_replaced_history = []
-        
+
         ## Gym interface Obsercation and Action spaces
         # All features are normalized [0, 1]
         self.min_feature = 0.0
         self.max_feature = 1.0
-        
-        # Define state and action limits        
-        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature, 
+
+        # Define state and action limits
+        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature,
                                    self.min_feature, self.min_feature, self.min_feature,
                                    self.min_feature, self.min_feature], dtype=np.float32)
-        
-        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature, 
+
+        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature,
                                     self.max_feature, self.max_feature, self.max_feature,
                                     self.max_feature, self.max_feature], dtype=np.float32)
-        
-        
+
+
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
-             
+
     def step(self, action):
         """
         Args: action. Discrete - 1=Replace tool, 0=Continue milling operation
@@ -690,27 +690,27 @@ class MillingTool_MS(gym.Env):
         # Get current observation from environment
         self.state = self._get_observation(self.df_index)
         tool_wear = self.state[0]
-        
+
         # Add white noise for robustness
         if self.add_noise:
             tool_wear += np.random.rand()/self.add_noise
-        
+
         # Termination condition
         if self.ep_length >= self.max_operations:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Max. milling operations crossed'}
-            
+
         elif tool_wear > self.wear_threshold and np.random.uniform() < self.breakdown_chance:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Tool breakdown'}
-            
+
         else:
             terminated = False
-            info = {'action':'Continue'} 
+            info = {'action':'Continue'}
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
@@ -725,7 +725,7 @@ class MillingTool_MS(gym.Env):
             if action:
                 # V.3.3 reward += -10.0
                 # reward -= 1.0*self.df_index
-                reward += -4.0 
+                reward += -4.0
                 # reward += 0.5*abs(self.wear_threshold - tool_wear)
                 # We replace the tool - so roll back tool life. -1 so that the increment in df_index will reset it to 0
                 self.df_index = -1
@@ -738,7 +738,7 @@ class MillingTool_MS(gym.Env):
 
             # Post process of step: Get next observation, fill history arrays
             self.ep_length += 1
-            
+
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
                 info = {'data_index':'Data over'}
@@ -761,7 +761,7 @@ class MillingTool_MS(gym.Env):
             self.df['vibration_z'][index],
             self.df['acoustic_emission_rms'][index]
         ], dtype=np.float32)
-                
+
         return next_state
 
     def reset(self):
@@ -769,7 +769,7 @@ class MillingTool_MS(gym.Env):
         self.ep_rewards_history.append(self.ep_total_reward)
         self.ep_length_history.append(self.ep_length)
         self.ep_tool_replaced_history.append(self.ep_tool_replaced)
-        
+
         # Reset environment variables and stats.
         self.df_index = 0
         self.reward = 0.0
@@ -781,10 +781,10 @@ class MillingTool_MS(gym.Env):
         self.state = self._get_observation(self.df_index)
         terminated = False
         return np.array(self.state, dtype=np.float32)
-    
+
     def render(self, mode='human', close=False):
         print(f'{self.df_index:>3d} | Ep.Len.: {self.ep_length:>3d} | Reward: {self.reward:>10.4f} | Wear: {wear:>5.4f} | {info}')
-        
+
     def close(self):
         del [self.df]
         gc.collect()
@@ -792,7 +792,7 @@ class MillingTool_MS(gym.Env):
 
 
 
-## V2: Add realistic situations 
+## V2: Add realistic situations
 ## 1. Random tool breakdown after crossing 30% of wear threshold
 ## 2. Random white noise added to wear
 
@@ -800,16 +800,16 @@ class MillingTool_SS(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
 
     metadata = {"render.modes": ["human"]}
-    
+
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance):
         print(f'\n** -- Simple single variable state. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
-        # Machine data frame properties    
+        # Machine data frame properties
         self.df = df
         self.df_length = len(self.df.index)
         self.df_index = 0
-        
-        # Milling operation and tool parameters 
+
+        # Milling operation and tool parameters
         self.wear_threshold = wear_threshold
         self.max_operations = max_operations
         self.breakdown_chance = breakdown_chance
@@ -823,20 +823,20 @@ class MillingTool_SS(gym.Env):
         self.ep_rewards_history = []
         self.ep_length_history = []
         self.ep_tool_replaced_history = []
-        
+
         ## Gym interface Obsercation and Action spaces
         # All features are normalized [0, 1]
         self.min_feature = 0.0
         self.max_feature = 1.0
-        
-        # Define state and action limits        
+
+        # Define state and action limits
         self.low_state = np.array([self.min_feature, self.min_feature], dtype=np.float32)
         self.high_state = np.array([self.max_feature, self.max_feature], dtype=np.float32)
-        
+
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
         self.observation_space = spaces.Box(low=self.low_state, high=self.high_state, dtype=np.float32)
-             
+
     def step(self, action):
         """
         Args: action. Discrete - 1=Replace tool, 0=Continue milling operation
@@ -846,27 +846,27 @@ class MillingTool_SS(gym.Env):
         self.state = self._get_observation(self.df_index)
         time_step = self.state[0]
         tool_wear = self.state[1]
-        
+
         # Add white noise for robustness
         if self.add_noise:
             tool_wear += np.random.rand()/self.add_noise
-        
+
         # Termination condition
         if self.ep_length >= self.max_operations:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Max. milling operations crossed'}
-            
+
         elif tool_wear > self.wear_threshold and np.random.uniform() < self.breakdown_chance:
             terminated = True
             self.reward = 0.0
             self.df_index = -1
             info = {'termination':'Tool breakdown'}
-            
+
         else:
             terminated = False
-            info = {'action':'Continue'} 
+            info = {'action':'Continue'}
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
@@ -889,7 +889,7 @@ class MillingTool_SS(gym.Env):
 
             # Post process of step: Get next observation, fill history arrays
             self.ep_length += 1
-            
+
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
                 info = {'data_index':'Data over'}
@@ -905,7 +905,7 @@ class MillingTool_SS(gym.Env):
             self.df['time'][index],
             self.df['tool_wear'][index]
         ], dtype=np.float32)
-                
+
         return next_state
 
     def reset(self):
@@ -913,7 +913,7 @@ class MillingTool_SS(gym.Env):
         self.ep_rewards_history.append(self.ep_total_reward)
         self.ep_length_history.append(self.ep_length)
         self.ep_tool_replaced_history.append(self.ep_tool_replaced)
-        
+
         # Reset environment variables and stats.
         self.df_index = 0
         self.reward = 0.0
@@ -925,12 +925,11 @@ class MillingTool_SS(gym.Env):
         self.state = self._get_observation(self.df_index)
         terminated = False
         return np.array(self.state, dtype=np.float32)
-    
+
     def render(self, mode='human', close=False):
         print(f'{self.df_index:>3d} | Ep.Len.: {self.ep_length:>3d} | Reward: {self.reward:>10.4f} | Wear: {wear:>5.4f} | {info}')
-        
+
     def close(self):
         del [self.df]
         gc.collect()
         print('** -- Envoronment closed. Data-frame memory released. Garbage collector invoked successfully -- **')
-
