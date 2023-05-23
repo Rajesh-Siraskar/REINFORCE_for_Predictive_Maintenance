@@ -1,0 +1,6 @@
+expt_n,environment,environment_info,data_file,R1,R2,R3,wear_threshold,threshold_factor,add_noise,breakdown_chance,episodes,milling_operations_max,version_prefix,test_info,test_cases,test_rounds,results_folder
+1,MS,PHM 2006. MULTI-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-20,0.098,0.9,1.00E+02,0.1,1000,750,PHM-MS-C04,Separate test set. Sampled from original PHM 2010 data sets,40,10,results/22-May-2023-Reruns
+2,MS,PHM 2006. MULTI-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-20,0.098,0.85,1.00E+02,0.1,1000,750,PHM-MS-C04,Separate test set. Sampled from original PHM 2010 data sets,40,10,results/22-May-2023-Reruns
+3,MS,PHM 2006. MULTI-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-5,0.098,0.9,1.00E+02,0.1,1000,750,PHM-MS-C04,Separate test set. Sampled from original PHM 2010 data sets,40,10,results/22-May-2023-Reruns
+4,MS,PHM 2006. MULTI-variate state V3.,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-40,0.13,0.85,1.00E+02,0.1,1000,750,PHM-MS-C06,Separate test set. Sampled from original PHM 2010 data sets,40,10,results/22-May-2023-Reruns
+5,MS,PHM 2006. MULTI-variate state V3.,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-10,0.13,0.85,1.00E+02,0.1,1000,750,PHM-MS-C06,Separate test set. Sampled from original PHM 2010 data sets,40,10,results/22-May-2023-Reruns

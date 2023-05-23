@@ -2,7 +2,7 @@
 # coding: utf-8
 
 # ## Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
-# Ver.10.0 Auto Experiment 
+# Ver.10.0 Auto Experiment
 
 import datetime
 import numpy as np
@@ -19,19 +19,15 @@ from reinforce_classes import PolicyNetwork, Agent
 
 # Auto experiment file structure
 df_expts = pd.read_csv('Experiments.csv')
-print(f'\n Experiments file loaded - ')
-
 n_expts = len(df_expts.index)
 
 for n_expt in range(n_expts):
-
     dt = datetime.datetime.now()
     dt_d = dt.strftime('%d-%b-%Y')
     dt_t = dt.strftime('%H_%M_%S')
     dt_m = dt.strftime('%H%M')
 
     # Load experiment parameters
-
     ENVIRONMENT_INFO = df_expts['environment'][n_expt]
     DATA_FILE = df_expts['data_file'][n_expt]
     R1 = df_expts['R1'][n_expt]
@@ -53,8 +49,9 @@ for n_expt in range(n_expts):
     df = pd.read_csv(DATA_FILE)
     n_records = len(df.index)
     VERSION = f'{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{WEAR_THRESHOLD}_{EPISODES}_{MILLING_OPERATIONS_MAX}'
+    print(f'\n [{dt_t}] Experiment {n_expt}: {VERSION}')
 
-    METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’} 
+    METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’}
     WEAR_THRESHOLD_NORMALIZED = 0.0 # normalized to the max wear threshold
 
     # Policy network learning parameters
@@ -66,8 +63,8 @@ for n_expt in range(n_expts):
     METRICS_FILE = f'{RESULTS_FOLDER}/{VERSION}_metrics.csv'
 
     print('\n -- Columns added to results file ', RESULTS_FILE)
-    results = ['Date', 'Time', 'Round', 'Environment', 'Training_data', 'Wear_Threshold', 'Test_data', 'Algorithm', 'Episodes', 'Normal_cases', 'Normal_error', 
-               'Replace_cases', 'Replace_error', 'Overall_error', 
+    results = ['Date', 'Time', 'Round', 'Environment', 'Training_data', 'Wear_Threshold', 'Test_data', 'Algorithm', 'Episodes', 'Normal_cases', 'Normal_error',
+               'Replace_cases', 'Replace_error', 'Overall_error',
                'Precision', 'Recall', 'F_Beta_0_5', 'F_Beta_0_75', 'F_1_Score']
     write_test_results(results, RESULTS_FILE)
 
@@ -75,7 +72,7 @@ for n_expt in range(n_expts):
     # ## Data pre-process
     # 1. Add noise
     # 2. Add ACTION_CODE based on tool wear threshold
-    # 3. Normalize data base 
+    # 3. Normalize data base
     # 4. Split into train and test
 
     # 1. Add noise
@@ -86,7 +83,7 @@ for n_expt in range(n_expts):
     df['ACTION_CODE'] = np.where(df['tool_wear'] < WEAR_THRESHOLD, 0.0, 1.0)
 
     # 3. Normalize
-    WEAR_MIN = df['tool_wear'].min() 
+    WEAR_MIN = df['tool_wear'].min()
     WEAR_MAX = df['tool_wear'].max()
     WEAR_THRESHOLD_NORMALIZED = THRESHOLD_FACTOR*(WEAR_THRESHOLD-WEAR_MIN)/(WEAR_MAX-WEAR_MIN)
     df_normalized = (df-df.min())/(df.max()-df.min())
@@ -113,7 +110,7 @@ for n_expt in range(n_expts):
     two_axes_plot(x, y1, y2, title=title, x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, file=wear_plot, threshold=WEAR_THRESHOLD_NORMALIZED)
 
 
-    # ## Milling Tool Environment - 
+    # ## Milling Tool Environment -
     # 1. MillingTool_SS: Single state: tool_wear and time
     # 2. MillingTool_MS: Multie-state: force_x; force_y; force_z; vibration_x; vibration_y; vibration_z; acoustic_emission_rms; tool_wear
     # - Note: ACTION_CODE is only used for evaluation later (testing phase) and is NOT passed as part of the environment states
@@ -145,7 +142,7 @@ for n_expt in range(n_expts):
                 # print('** DONE **', info)
                 break
 
-        # Learn during this episode 
+        # Learn during this episode
         loss = agent_RF.learn() # train per episode
         total_reward = sum(agent_RF.rewards)
 
@@ -153,7 +150,7 @@ for n_expt in range(n_expts):
         rewards_history.append(total_reward)
         loss_history.append(loss.item()) # Extract values from list of torch items for plotting
 
-        # On-policy - so discard all data 
+        # On-policy - so discard all data
         agent_RF.onpolicy_reset()
 
         if (episode%100 == 0):
@@ -181,9 +178,8 @@ for n_expt in range(n_expts):
     filename = f'{RESULTS_FOLDER}/{VERSION}_Episode_Length.png'
     single_axes_plot(x, env.ep_length_history, 'Episode length', VERSION, 'Episode', 'No of milling operations', 50, 0.0, filename)
 
-    filename = f'{RESULTS_FOLDER}/{VERSION}_Tool_Replacements.png' 
+    filename = f'{RESULTS_FOLDER}/{VERSION}_Tool_Replacements.png'
     single_axes_plot(x, env.ep_tool_replaced_history, 'Tool replacements per episode', VERSION, 'Episode', 'Replacements', 50, 0.0, filename)
-
 
     # ### Generate a balanced test set
     idx_replace_cases = df_test.index[df_test['ACTION_CODE'] >= 1.0]
@@ -192,22 +188,21 @@ for n_expt in range(n_expts):
     # Process results
     # eps = [i for i in range(EPISODES)]
     # store_results(RF_TRAINING_FILE, training_round, eps, rewards_history, env.ep_tool_replaced_history)
-    print('\n === REINFORCE model trained ===\n')
-    print(80*'-')
-    print(f'Algorithm\tNormal\terr.%\tReplace\terr.%\tOverall err.%')
-    print(80*'-')
+    print('- REINFORCE model trained.')
+    # print(80*'-')
+    # print(f'Algorithm\tNormal\terr.%\tReplace\terr.%\tOverall err.%')
+    # print(80*'-')
     for test_round in range(TEST_ROUNDS):
         # Create test cases
         idx_replace_cases = np.random.choice(idx_replace_cases, int(TEST_CASES/2), replace=False)
         idx_normal_cases = np.random.choice(idx_normal_cases, int(TEST_CASES/2), replace=False)
         test_cases = [*idx_normal_cases, *idx_replace_cases]
 
-        results = test_script(METRICS_METHOD, test_round, df_test, 'REINFORCE', EPISODES, env_test, ENVIRONMENT_INFO, agent_RF, 
+        results = test_script(METRICS_METHOD, test_round, df_test, 'REINFORCE', EPISODES, env_test, ENVIRONMENT_INFO, agent_RF,
                               test_cases, TEST_INFO, DATA_FILE, WEAR_THRESHOLD, RESULTS_FILE)
         write_test_results(results, RESULTS_FILE)
 
-    print(f'\n- Test results written to file: {RESULTS_FILE}')
-
+    print(f'- REINFORCE Test results written to file: {RESULTS_FILE}.\n')
 
     # ## Stable-Baselines Algorithms
 
@@ -219,32 +214,29 @@ for n_expt in range(n_expts):
         if SB_ALGO.upper() == 'DQN': agent_SB = DQN('MlpPolicy', env)
         if SB_ALGO.upper() == 'PPO': agent_SB = PPO('MlpPolicy', env)
 
-        print(f'\n{SB_ALGO} - Training and Testing Stable-Baselines-3 {SB_ALGO} algorithm')
+        print(f'- Training and Testing Stable-Baselines-3 {SB_ALGO} algorithm.')
         agent_SB.learn(total_timesteps=EPISODES)
-
         SB_agents.append(agent_SB)
-        print(agent_SB)
 
     n = 0
     for agent_SB in SB_agents:
-        print(f'\n\n - Testing Stable-Baselines-3 {agent_SB}')
-        print(80*'-')
-        print(f'Algo.\tNormal\tErr.%\tReplace\tErr.%\tOverall err.%')
-        print(80*'-')
+        print(f'- Testing Stable-Baselines-3 {agent_SB}.')
+        # print(80*'-')
+        # print(f'Algo.\tNormal\tErr.%\tReplace\tErr.%\tOverall err.%')
+        # print(80*'-')
         for test_round in range(TEST_ROUNDS):
             # Create test cases
             idx_replace_cases = np.random.choice(idx_replace_cases, int(TEST_CASES/2), replace=False)
             idx_normal_cases = np.random.choice(idx_normal_cases, int(TEST_CASES/2), replace=False)
             test_cases = [*idx_normal_cases, *idx_replace_cases]
-            results = test_script(METRICS_METHOD, test_round, df_test, algos[n], EPISODES, env_test, ENVIRONMENT_INFO, 
+            results = test_script(METRICS_METHOD, test_round, df_test, algos[n], EPISODES, env_test, ENVIRONMENT_INFO,
                                   agent_SB, test_cases, TEST_INFO, DATA_FILE, WEAR_THRESHOLD, RESULTS_FILE)
             write_test_results(results, RESULTS_FILE)
         n += 1
 
+    ### Create a consolidated algorithm wise metrics summary
 
-    # ### Create a consolidated algorithm wise metrics summary
-
-    print(80*'-', f'\n Algorithm level consolidated metrics being reported to file:\n {METRICS_FILE}\n', 80*'-')
+    print(f'- Algorithm level consolidated metrics being reported to file: {METRICS_FILE}.')
 
     header_columns = [VERSION]
     write_test_results(header_columns, METRICS_FILE)
@@ -257,7 +249,7 @@ for n_expt in range(n_expts):
     write_test_results(header_info, METRICS_FILE)
     write_test_results([], METRICS_FILE) # leave a blank line
 
-    print('- Experiment related meta info written')
+    print('- Experiment related meta info written.')
 
     df_algo_results = pd.read_csv(RESULTS_FILE)
     # algo_metrics = compute_metrics_simple(df_algo_results)
@@ -265,16 +257,15 @@ for n_expt in range(n_expts):
 
     write_metrics_report(algo_metrics, METRICS_FILE, 4)
     write_test_results([], METRICS_FILE) # leave a blank line
-    print('- Algorithm level consolidated metrics reported to file')
+    print('- Algorithm level consolidated metrics reported to file.')
 
     write_test_results(header_columns, CONSOLIDATED_METRICS_FILE)
     write_test_results(header_info, CONSOLIDATED_METRICS_FILE)
     write_test_results([], CONSOLIDATED_METRICS_FILE) # leave a blank line
     write_metrics_report(algo_metrics, CONSOLIDATED_METRICS_FILE, 4)
     write_test_results([120*'-'], CONSOLIDATED_METRICS_FILE) # leave a blank line
-    print(f'- {CONSOLIDATED_METRICS_FILE} file updated')
+    print(f'- {CONSOLIDATED_METRICS_FILE} file updated.')
     print(algo_metrics.round(3))
-    
-    print('\n -------- End Experiment  --------\n') 
-    
+    print('- End Experiment {n_expt}.\n')
+
 print('\n\n ================= END OF PROGRAM =================')

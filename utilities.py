@@ -16,20 +16,18 @@ def lnoise(add_noise, breakdown_chance):
         l = 'NoNBD'
     else:
         l = 'ArbNBD'
-    return (l)    
+    return (l)
 
 
 def downsample(df, sample_rate):
     # import pandas as pd
     # df = pd.read_csv(file)
-    print(f'- Input data records: {len(df.index)}.\n- Sampling rate: {sample_rate}\n- Expected rows {round(len(df.index)/sample_rate)}')
     df_downsampled = df.iloc[::sample_rate, :]
-    
-    print(f'- Down-sampled to {len(df_downsampled.index)} rows.')
+    print(f'- Input data records: {len(df.index)}. Sampling rate: {sample_rate}. Expected rows {round(len(df.index)/sample_rate)}. Down-sampled to {len(df_downsampled.index)} rows.')
     return(df_downsampled)
 
 def compute_metrics_all(df):
-    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean','std'], 'Recall': ['mean','std'], 
+    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean','std'], 'Recall': ['mean','std'],
                                              'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
                                              'Normal_cases': ['mean'], 'Normal_error': ['mean','std'],
                                              'Replace_cases': ['mean'], 'Replace_error': ['mean','std'],
@@ -37,26 +35,26 @@ def compute_metrics_all(df):
     return(metrics)
 
 def compute_metrics(df):
-    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean','std'], 'Recall': ['mean','std'], 
+    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean','std'], 'Recall': ['mean','std'],
                                              'F_Beta_0_5': ['mean','std'], 'F_Beta_0_75': ['mean','std'], 'F_1_Score': ['mean','std'],
                                              'Normal_error': ['mean'], 'Replace_error': ['mean'], 'Overall_error': ['mean']})
     return(metrics)
 
 def compute_metrics_simple(df):
-    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean'], 'Recall': ['mean'], 
+    metrics = df.groupby(['Algorithm']).agg({'Precision': ['mean'], 'Recall': ['mean'],
                                              'F_Beta_0_5': ['mean'], 'F_Beta_0_75': ['mean'], 'F_1_Score': ['mean'],
                                              'Normal_error': ['mean'],'Replace_error': ['mean'], 'Overall_error': ['mean']})
     return(metrics)
 
 
 def write_metrics_report(metrics, report_file, round_decimals=8):
-    from pathlib import Path 
-    report_file = Path(report_file)  
+    from pathlib import Path
+    report_file = Path(report_file)
     report_file.parent.mkdir(parents=True, exist_ok=True)
     metrics = metrics.round(round_decimals)
     metrics.to_csv(report_file, mode='a')
-    
-def store_results(file, rounds, episodes, rewards_history, ep_tool_replaced_history):    
+
+def store_results(file, rounds, episodes, rewards_history, ep_tool_replaced_history):
     dt = datetime.datetime.now()
     dt_d = dt.strftime('%d-%b-%Y')
     dt_t = dt.strftime('%H:%M:%S')
@@ -73,7 +71,7 @@ def write_test_results(results, results_file):
         f_object.close()
 
     # print(f'- Test results written to file: {results_file}')
-    
+
 def test_script(method, training_round, df, algo, episodes, env, env_info, agent, test_cases, training_info, data_file, wear_threshold, results_file):
     dt = datetime.datetime.now()
     dt_d = dt.strftime('%d-%b-%Y')
@@ -81,7 +79,7 @@ def test_script(method, training_round, df, algo, episodes, env, env_info, agent
 
     lst_action_actual = []
     lst_action_pred = []
-    
+
     cumm_error_0 = 0.0
     cumm_error_1 = 0.0
     n_0 = 0
@@ -90,10 +88,10 @@ def test_script(method, training_round, df, algo, episodes, env, env_info, agent
         state = env._get_observation(idx)
         action_pred, next_state = agent.predict(state)
         action_actual = int(df['ACTION_CODE'][idx])
-        
+
         lst_action_actual.append(action_actual)
         lst_action_pred.append(action_pred)
-    
+
         e = int(action_pred - action_actual)
         if action_actual:
             cumm_error_1 += abs(e)
@@ -105,27 +103,27 @@ def test_script(method, training_round, df, algo, episodes, env, env_info, agent
             # print(f' ** {idx:4d}: VB (mm): {state[1]*17.855:6.3f} \t Action predicted: {action_pred} \t actual: {action_actual} \t error: {e}')
     # end for. List of y_true (lst_action_actual) and y_pred (lst_action_pred) collected.
     # Proceed to compute precision recall
-    
+
     # sklearn.metrics.fbeta_score(y_true, y_pred, *, beta, labels=None, pos_label=1, average='binary', sample_weight=None, zero_division='warn')[source]
-    
+
     # Compute F_Beta at 0.5, 0.75, 1.0
     (pr, rc, f1_0_5, support) = precision_recall_fscore_support(y_true=lst_action_actual, y_pred=lst_action_pred, beta=0.5, average=method, zero_division=0)
     (pr, rc, f1_0_75, support) = precision_recall_fscore_support(y_true=lst_action_actual, y_pred=lst_action_pred, beta=0.75, average=method, zero_division=0)
     (pr, rc, f1_1_0, support) = precision_recall_fscore_support(y_true=lst_action_actual, y_pred=lst_action_pred, beta=1.0, average=method, zero_division=0)
-    
+
     if n_0 == 0: n_0 = 1
     if n_1 == 0: n_1 = 1
 
-    print(f'{algo}\t{n_0}\t{cumm_error_0/n_0:5.3f}\t{n_1}\t{cumm_error_1/n_1:5.3f}\t{(cumm_error_0 + cumm_error_1)/(n_0+n_1):5.3f}')
-    
+    # print(f'{algo}\t{n_0}\t{cumm_error_0/n_0:5.3f}\t{n_1}\t{cumm_error_1/n_1:5.3f}\t{(cumm_error_0 + cumm_error_1)/(n_0+n_1):5.3f}')
+
     # File format
     # Date	Time	Enviroment	Data_file	Test_set	Algo.	Episodes	Normal_cases	Normal_Error\
     # Replacement_cases	Replacement_Error	Overall_Error	Parameter	Value
-    # 5/7/2023	51:35.2	Simple ME	Tool_Wear_VB.csv	Sampled from training	A2C	300	37	54.1%	63	54.0%	54.0%	
-    results = [dt_d, dt_t, training_round, env_info, data_file, wear_threshold, training_info, algo, episodes, 
+    # 5/7/2023	51:35.2	Simple ME	Tool_Wear_VB.csv	Sampled from training	A2C	300	37	54.1%	63	54.0%	54.0%
+    results = [dt_d, dt_t, training_round, env_info, data_file, wear_threshold, training_info, algo, episodes,
                n_0, cumm_error_0/n_0, n_1, cumm_error_1/n_1, (cumm_error_0 + cumm_error_1)/(n_0+n_1),
                pr, rc, f1_0_5, f1_0_75, f1_1_0]
-    
+
     return results
 
 
@@ -135,18 +133,18 @@ def plot_learning_curve(x, rewards_history, loss_history, moving_avg_n, filename
     plt.figure(figsize=(10, 4))
     ax = fig.add_subplot(111, label='1')
     ax2 = fig.add_subplot(111, label='2', frame_on=False)
-    
+
     ax.plot(x, rewards_history, color='C0')
     ax.set_xlabel('Training steps', color='C0')
     ax.set_ylabel('Rewards', color='C0')
     ax.tick_params(axis='x', color='C0')
     ax.tick_params(axis='y', color='C0')
-    
+
     N = len(rewards_history)
     moving_avg = np.empty(N)
     for t in range(N):
         moving_avg[t] = np.mean(loss_history[max(0, t-moving_avg_n):(t+1)])
-        
+
     ax2.scatter(x, moving_avg, color='C1', s=1)
     ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
@@ -155,9 +153,9 @@ def plot_learning_curve(x, rewards_history, loss_history, moving_avg_n, filename
     ax2.tick_params(axis='y', colors='C1')
     plt.savefig(filename)
     ### plt.show()
-        
+
 def single_axes_plot(x, y, title='', subtitle='', x_label='', y_label='', xticks=0, threshold=0.0, filename='plot.png'):
-    
+
     # Plot y
     fig, ax = plt.subplots(1, 1, figsize=(10, 4), dpi= 80)
     ax.plot(x, y, color='tab:blue', linewidth=2)
@@ -199,10 +197,10 @@ def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='',
     plt.title(subtitle, fontsize=10, pad=10, loc="left")
     # ax.set_title(title, fontsize=18)
     ax.legend(['Rewards', 'Moving avg.'])
-    
+
     fig.tight_layout()
     plt.savefig(filename)
-    ### plt.show()  
+    ### plt.show()
 
 def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold=0.0):
     # Plot Line1 (Left Y Axis)
@@ -235,7 +233,7 @@ def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_
     fig.tight_layout()
     plt.savefig(file)
     ### plt.show()
-    
+
 def plot_error_bounds(x, y):
     import seaborn as sns
     sns.set()
@@ -250,7 +248,7 @@ def plot_error_bounds(x, y):
     plt.margins(x=0)
     plt.legend(['Rewards'])
     ### plt.show()
-    
+
 # # DOWN SAMPLE HIGH RES DATA
 # WEAR_THRESHOLD = 0.1
 # DATA_FILE = 'data\PHM_C04_MultiStateEnv.csv'
