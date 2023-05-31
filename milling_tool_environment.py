@@ -261,14 +261,14 @@ class MillingTool_SS_V3(gym.Env):
 
             reward = 0.0
             if tool_wear < self.wear_threshold:
-                reward += self.df_index
+                reward += self.R1*self.df_index
             else:
                 # Threshold breached
-                reward += -self.df_index # farther away from threshold => more penalty
+                reward += self.R2*self.df_index # farther away from threshold => more penalty
 
             # Based on the action = 1 replace the tool or if 0, continue with normal operation
             if action:
-                reward += -100.0
+                reward += self.R3
                 # We replace the tool - so roll back tool life. -1 so that the increment in df_index will reset it to 0
                 self.df_index = -1
                 self.ep_tool_replaced += 1

@@ -3,7 +3,7 @@
 
 # ## Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
 # Ver.10.0 Auto Experiment
-print ('\n ====== REINFORCE for Predictive Maintenance. Automated Experiments V.10. ====== \n')
+print ('\n ====== REINFORCE for Predictive Maintenance. Automated Experiments V.11.1 (MT SS env.) ====== \n')
 print ('- Loading packages...')
 import datetime
 import numpy as np
@@ -46,6 +46,10 @@ for n_expt in range(n_expts):
     TEST_CASES = df_expts['test_cases'][n_expt]
     TEST_ROUNDS = df_expts['test_rounds'][n_expt]
     RESULTS_FOLDER = df_expts['results_folder'][n_expt]
+
+    TEST_FILE = df_expts['test_file'][n_expt]
+    TRAIN_SR = df_expts['train_sample_rate'][n_expt]
+    TEST_SR = df_expts['test_sample_rate'][n_expt]
 
     ## Read data
     df = pd.read_csv(DATA_FILE)
@@ -92,16 +96,23 @@ for n_expt in range(n_expts):
     df_normalized['ACTION_CODE'] = df['ACTION_CODE']
     print(f'- Tool wear data imported ({len(df.index)} records).')
 
-    # 4. Split into train and test
-    df_train = downsample(df_normalized, 100)
-    df_train.to_csv('TempTrain.csv')
-    df_train = pd.read_csv('TempTrain.csv')
+    # 4. Test file -or- create test file
+    print(f'type {type(TRAIN_SR)} - {TRAIN_SR} - test file {TEST_FILE}')
+    if TRAIN_SR:
+        # 4. Split into train and test
+        df_train = downsample(df_normalized, TRAIN_SR)
+        df_train.to_csv('TempTrain.csv')
+        df_train = pd.read_csv('TempTrain.csv')
 
-    df_test = downsample(df_normalized, 70)
-    df_test.to_csv('TempTest.csv')
-    df_test = pd.read_csv('TempTest.csv')
-
-    print(f'- Tool wear data split into train ({len(df_train.index)} records) and test ({len(df_test.index)} records).')
+        df_test = downsample(df_normalized, TEST_SR)
+        df_test.to_csv('TempTest.csv')
+        df_test = pd.read_csv('TempTest.csv')
+        print(f'- Tool wear data split into train ({len(df_train.index)} records) and test ({len(df_test.index)} records).')
+    else:
+        # 4. Split into train and test
+        df_train = df_normalized
+        df_test = pd.read_csv(TEST_FILE)
+        print(f'* Separate test data provided: {TEST_FILE} - ({len(df_test.index)} records).')
 
     n_records = len(df_train.index)
     x = [n for n in range(n_records)]
@@ -117,8 +128,8 @@ for n_expt in range(n_expts):
     # 2. MillingTool_MS: Multie-state: force_x; force_y; force_z; vibration_x; vibration_y; vibration_z; acoustic_emission_rms; tool_wear
     # - Note: ACTION_CODE is only used for evaluation later (testing phase) and is NOT passed as part of the environment states
 
-    env = MillingTool_MS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-    env_test = MillingTool_MS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+    env = MillingTool_SS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+    env_test = MillingTool_SS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
 
     # ## REINFORCE RL Algorithm
     ### Main loop
@@ -224,7 +235,7 @@ for n_expt in range(n_expts):
 
     n = 0
     for agent_SB in SB_agents:
-        print(f'- Testing Stable-Baselines-3 {SB_ALGO} model...')
+        print(f'- Testing Stable-Baselines-3 {agent_SB} model...')
         # print(80*'-')
         # print(f'Algo.\tNormal\tErr.%\tReplace\tErr.%\tOverall err.%')
         # print(80*'-')
