@@ -6,6 +6,15 @@ import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 import datetime
+import pickle
+
+def save_model(model, filepath):
+    pickle.dump(model, open(filepath, 'wb'))
+    print(f'* Model saved to {filepath}.')
+
+def load_model(filepath):
+    print(f'- Loading saved model from {filepath}.')
+    return (pickle.load(open(filepath, 'rb')))
 
 def lnoise(add_noise, breakdown_chance):
     if add_noise == 1e3 and breakdown_chance == 0.05:
@@ -120,6 +129,7 @@ def test_script(method, training_round, df, algo, episodes, env, env_info, agent
     # Date	Time	Enviroment	Data_file	Test_set	Algo.	Episodes	Normal_cases	Normal_Error\
     # Replacement_cases	Replacement_Error	Overall_Error	Parameter	Value
     # 5/7/2023	51:35.2	Simple ME	Tool_Wear_VB.csv	Sampled from training	A2C	300	37	54.1%	63	54.0%	54.0%
+    # Pr [14], Rc [15], F1 [18]
     results = [dt_d, dt_t, training_round, env_info, data_file, wear_threshold, training_info, algo, episodes,
                n_0, cumm_error_0/n_0, n_1, cumm_error_1/n_1, (cumm_error_0 + cumm_error_1)/(n_0+n_1),
                pr, rc, f1_0_5, f1_0_75, f1_1_0]
@@ -202,7 +212,7 @@ def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='',
     plt.savefig(filename)
     ### plt.show()
 
-def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold=0.0):
+def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold_org=0.0, threshold=0.0,):
     # Plot Line1 (Left Y Axis)
     fig, ax1 = plt.subplots(1,1,figsize=(10, 4), dpi= 80)
     ax1.plot(x, y1, color='tab:orange', linewidth=2)
@@ -219,7 +229,9 @@ def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_
     ax1.tick_params(axis='y', rotation=0, labelcolor='tab:red')
     ax1.grid(alpha=.4)
     if threshold > 0.0:
-        ax1.axhline(y = threshold, color = 'r', linestyle = '--',  linewidth=1.0)
+        ax1.axhline(y = threshold_org, color = 'r', linestyle = 'dotted',  linewidth=1.0)
+        ax1.grid(alpha=.3)
+        ax1.axhline(y = threshold, color = 'r', linestyle = 'dashed',  linewidth=1.0)
         ax1.grid(alpha=.4)
 
     # ax2 (right Y axis)

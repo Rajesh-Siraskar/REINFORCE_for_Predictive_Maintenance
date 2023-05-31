@@ -1,3 +1,6 @@
 expt_n,environment,environment_info,data_file,R1,R2,R3,wear_threshold,threshold_factor,add_noise,breakdown_chance,episodes,milling_operations_max,version_prefix,test_info,test_cases,test_rounds,results_folder,test_file,train_sample_rate,test_sample_rate
-1,SS,PHM 2010. Simple uni-variate state V3.,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-20,0.13,0.85,1.00E+04,0.05,1000,348,PHM-C06-SS-L,Separate test set.,40,5,results/Expts_26-May-2023,,100,70
-2,SS,PHM 2010. Simple uni-variate state V3.,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-20,0.13,0.85,1.00E+03,0.1,1000,348,PHM-C06-SS-H,Separate test set.,40,5,results/Expts_26-May-2023,,100,70
+1,MS,PHM 2010. Complex multi-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.95,1.00E+03,0.05,1000,355,PHM_C04_MS,Separate test set.,40,5,results/Expts_31-May-2023,,100,70
+2,MS,PHM 2010. Complex multi-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.9,1.00E+03,0.05,1000,355,PHM_C04_MS,Separate test set.,40,5,results/Expts_31-May-2023,,100,70
+3,MS,PHM 2010. Complex multi-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.85,1.00E+03,0.05,1000,355,PHM_C04_MS,Separate test set.,40,5,results/Expts_31-May-2023,,100,70
+4,MS,PHM 2010. Complex multi-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.8,1.00E+03,0.05,1000,355,PHM_C04_MS,Separate test set.,40,5,results/Expts_31-May-2023,,100,70
+5,MS,PHM 2010. Complex multi-variate state V3.,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.75,1.00E+03,0.05,1000,355,PHM_C04_MS,Separate test set.,40,5,results/Expts_31-May-2023,,100,70

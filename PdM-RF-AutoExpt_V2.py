@@ -3,7 +3,7 @@
 
 # ## Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
 # Ver.10.0 Auto Experiment
-print ('\n ====== REINFORCE for Predictive Maintenance. Automated Experiments V.11.1 (MT SS env.) ====== \n')
+print ('\n ====== REINFORCE for Predictive Maintenance. Automated Experiments V.12.3 (Wear plot) ====== \n')
 print ('- Loading packages...')
 import datetime
 import numpy as np
@@ -11,11 +11,9 @@ import pandas as pd
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import A2C, PPO, DQN
 
-import milling_tool_environment
 from milling_tool_environment import MillingTool_SS_V3, MillingTool_MS_V3
 from utilities import compute_metrics, compute_metrics_simple, write_metrics_report, store_results, plot_learning_curve, single_axes_plot, lnoise
-import utilities
-from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_script, write_test_results, downsample
+from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_script, write_test_results, downsample, save_model, load_model
 from reinforce_classes import PolicyNetwork, Agent
 
 # Auto experiment file structure
@@ -30,7 +28,9 @@ for n_expt in range(n_expts):
     dt_m = dt.strftime('%H%M')
 
     # Load experiment parameters
-    ENVIRONMENT_INFO = df_expts['environment'][n_expt]
+    ENVIRONMENT_CLASS = df_expts['environment'][n_expt]
+    ENVIRONMENT_INFO = df_expts['environment_info'][n_expt]
+    ENVIRONMENT_INFO = f'{ENVIRONMENT_INFO}-{ENVIRONMENT_CLASS}'
     DATA_FILE = df_expts['data_file'][n_expt]
     R1 = df_expts['R1'][n_expt]
     R2 = df_expts['R2'][n_expt]
@@ -56,6 +56,8 @@ for n_expt in range(n_expts):
     n_records = len(df.index)
     VERSION = f'{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{WEAR_THRESHOLD}_{THRESHOLD_FACTOR}_{R3}_{EPISODES}_{MILLING_OPERATIONS_MAX}_'
     print(f'\n [{dt_t}] Experiment {n_expt}: {VERSION}')
+
+    model_file = f'models/RF_Model_{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{dt_d}_{dt_m}.mdl'
 
     METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’}
     WEAR_THRESHOLD_NORMALIZED = 0.0 # normalized to the max wear threshold
@@ -91,6 +93,7 @@ for n_expt in range(n_expts):
     # 3. Normalize
     WEAR_MIN = df['tool_wear'].min()
     WEAR_MAX = df['tool_wear'].max()
+    WEAR_THRESHOLD_ORG_NORMALIZED = (WEAR_THRESHOLD-WEAR_MIN)/(WEAR_MAX-WEAR_MIN)
     WEAR_THRESHOLD_NORMALIZED = THRESHOLD_FACTOR*(WEAR_THRESHOLD-WEAR_MIN)/(WEAR_MAX-WEAR_MIN)
     df_normalized = (df-df.min())/(df.max()-df.min())
     df_normalized['ACTION_CODE'] = df['ACTION_CODE']
@@ -120,7 +123,7 @@ for n_expt in range(n_expts):
     y2 = df_train['ACTION_CODE']
     wear_plot = f'{RESULTS_FOLDER}/{VERSION}_wear_plot.png'
     title=f'Tool Wear (mm) data\n{VERSION}'
-    two_axes_plot(x, y1, y2, title=title, x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, file=wear_plot, threshold=WEAR_THRESHOLD_NORMALIZED)
+    two_axes_plot(x, y1, y2, title=title, x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, file=wear_plot, threshold_org = WEAR_THRESHOLD_ORG_NORMALIZED, threshold=WEAR_THRESHOLD_NORMALIZED)
 
 
     # ## Milling Tool Environment -
@@ -128,8 +131,14 @@ for n_expt in range(n_expts):
     # 2. MillingTool_MS: Multie-state: force_x; force_y; force_z; vibration_x; vibration_y; vibration_z; acoustic_emission_rms; tool_wear
     # - Note: ACTION_CODE is only used for evaluation later (testing phase) and is NOT passed as part of the environment states
 
-    env = MillingTool_SS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-    env_test = MillingTool_SS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+    if ENVIRONMENT_CLASS == 'SS':
+        env = MillingTool_SS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+        env_test = MillingTool_SS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+    elif ENVIRONMENT_CLASS == 'MS':
+        env = MillingTool_MS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+        env_test = MillingTool_MS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+    else:
+        print(' ERROR - initatizing environment')
 
     # ## REINFORCE RL Algorithm
     ### Main loop
@@ -202,10 +211,12 @@ for n_expt in range(n_expts):
     # Process results
     # eps = [i for i in range(EPISODES)]
     # store_results(RF_TRAINING_FILE, training_round, eps, rewards_history, env.ep_tool_replaced_history)
-    print('- Test REINFORCE model...')
+    print('\n- Test REINFORCE model...')
     # print(80*'-')
     # print(f'Algorithm\tNormal\terr.%\tReplace\terr.%\tOverall err.%')
     # print(80*'-')
+    avg_Pr = avg_Rc = avg_F1 = 0.0
+
     for test_round in range(TEST_ROUNDS):
         # Create test cases
         idx_replace_cases = np.random.choice(idx_replace_cases, int(TEST_CASES/2), replace=False)
@@ -215,8 +226,21 @@ for n_expt in range(n_expts):
         results = test_script(METRICS_METHOD, test_round, df_test, 'REINFORCE', EPISODES, env_test, ENVIRONMENT_INFO, agent_RF,
                               test_cases, TEST_INFO, DATA_FILE, WEAR_THRESHOLD, RESULTS_FILE)
         write_test_results(results, RESULTS_FILE)
+        avg_Pr += results[14]
+        avg_Rc += results[15]
+        avg_F1 += results[16]
 
+    avg_Pr = avg_Pr/TEST_ROUNDS
+    avg_Rc = avg_Rc/TEST_ROUNDS
+    avg_F1 = avg_F1/TEST_ROUNDS
+    print(f'Pr: {avg_Pr:0.3f} \t Rc: {avg_Rc:0.3f} \t F1:{avg_F1:0.3f}')
     print(f'- REINFORCE Test results written to file: {RESULTS_FILE}.\n')
+
+    ## Add model training hyper parameters and save model, if metrics > 0.65
+    if avg_Pr > 0.60 and avg_F1 > 0.60:
+        print(f'\n*** REINFORCE model performance satisfactory. Saving model to {model_file} ***\n')
+        agent_RF.model_parameters = {'R1':R1, 'R2':R2, 'R3':R3, 'WEAR_THRESHOLD':WEAR_THRESHOLD, 'THRESHOLD_FACTOR':THRESHOLD_FACTOR, 'ADD_NOISE':ADD_NOISE, 'BREAKDOWN_CHANCE':BREAKDOWN_CHANCE, 'EPISODES':EPISODES, 'MILLING_OPERATIONS_MAX':MILLING_OPERATIONS_MAX}
+        save_model(agent_RF, model_file)
 
     # ## Stable-Baselines Algorithms
     print('\n* Train Stable-Baselines-3 A2C, DQN and PPO models...')
@@ -232,6 +256,9 @@ for n_expt in range(n_expts):
         print(f'- Training Stable-Baselines-3 {SB_ALGO} algorithm...')
         agent_SB.learn(total_timesteps=EPISODES)
         SB_agents.append(agent_SB)
+        # print(f'- Save Stable-Baselines-3 model')
+        # model_file = f'models/{SB_ALGO}_{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{dt_d}_{dt_m}.mdl'
+        # save_model(agent_SB, model_file)
 
     n = 0
     for agent_SB in SB_agents:
@@ -247,7 +274,10 @@ for n_expt in range(n_expts):
             results = test_script(METRICS_METHOD, test_round, df_test, algos[n], EPISODES, env_test, ENVIRONMENT_INFO,
                                   agent_SB, test_cases, TEST_INFO, DATA_FILE, WEAR_THRESHOLD, RESULTS_FILE)
             write_test_results(results, RESULTS_FILE)
+            # end test loop
+
         n += 1
+        # end SB agents loop
 
     ### Create a consolidated algorithm wise metrics summary
 
