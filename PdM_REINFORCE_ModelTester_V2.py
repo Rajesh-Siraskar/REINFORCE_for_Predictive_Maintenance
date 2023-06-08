@@ -2,11 +2,11 @@
 # coding: utf-8
 
 # Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
-# V.3.0: Add cleaning up files. If the performance is not satisfactory -
-#           delete the files, also do not train and test SB models
+# V.1.0: Running model tests with pre-trained models
 
-print ('\n ====== REINFORCE for Predictive Maintenance ======')
-print ('        V.3.0 08-Jun-2023 Auto clean files\n')
+print (' ====== REINFORCE for Predictive Maintenance ======')
+print (' ======      Pre-trained model tester        ======')
+print ('        V.1.0 08-Jun-2023 Test pre-trained models')
 print ('- Loading packages...')
 import datetime
 import os
@@ -21,12 +21,11 @@ from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_
 from reinforce_classes import PolicyNetwork, Agent
 
 # Auto experiment file structure
-print ('- Loading Experiments...')
-df_expts = pd.read_csv('Experiments.csv')
+print ('- Loading pre-trained PdM models...')
+df_expts = pd.read_csv('TestModels.csv')
 df_expts['Pr'] = 0.0
 df_expts['Rc'] = 0.0
 df_expts['F1'] = 0.0
-df_expts['model_file'] = 'Not satisfactory'
 
 n_expts = len(df_expts.index)
 
@@ -38,26 +37,35 @@ for n_expt in range(n_expts):
     dt_t = dt.strftime('%H_%M_%S')
     dt_m = dt.strftime('%d-%H%M')
 
+    # The pre-trained model to be tested
+    MODEL_FILE = df_expts['model_file'][n_expt]
+    print('\n', 120*'-')
+    print(f' ---- [{dt_t}] Test run: {n_expt}  ---- ')
+    if os.path.isfile(MODEL_FILE):
+        agent_RF = load_model(MODEL_FILE)
+        print(f'* Loaded model: {MODEL_FILE}')
+    else:
+        print(f' !!! ERROR: Unable to load model: {MODEL_FILE}')
+
     # Load experiment parameters
     ENVIRONMENT_CLASS = df_expts['environment'][n_expt]
     ENVIRONMENT_INFO = df_expts['environment_info'][n_expt]
     ENVIRONMENT_INFO = f'{ENVIRONMENT_INFO}-{ENVIRONMENT_CLASS}'
     DATA_FILE = df_expts['data_file'][n_expt]
-    R1 = df_expts['R1'][n_expt]
-    R2 = df_expts['R2'][n_expt]
-    R3 = df_expts['R3'][n_expt]
-    WEAR_THRESHOLD = df_expts['wear_threshold'][n_expt]
-    THRESHOLD_FACTOR = df_expts['threshold_factor'][n_expt]
-    ADD_NOISE = df_expts['add_noise'][n_expt]
-    BREAKDOWN_CHANCE = df_expts['breakdown_chance'][n_expt]
-    EPISODES = df_expts['episodes'][n_expt]
-    MILLING_OPERATIONS_MAX = df_expts['milling_operations_max'][n_expt]
+    R1 = agent_RF.model_parameters['R1']
+    R2 = agent_RF.model_parameters['R2']
+    R3 = agent_RF.model_parameters['R3']
+    WEAR_THRESHOLD = agent_RF.model_parameters['WEAR_THRESHOLD']
+    THRESHOLD_FACTOR = agent_RF.model_parameters['THRESHOLD_FACTOR']
+    ADD_NOISE = agent_RF.model_parameters['ADD_NOISE']
+    BREAKDOWN_CHANCE =  agent_RF.model_parameters['BREAKDOWN_CHANCE']
+    EPISODES = agent_RF.model_parameters['EPISODES']
+    MILLING_OPERATIONS_MAX = agent_RF.model_parameters['MILLING_OPERATIONS_MAX']
     ver_prefix = df_expts['version_prefix'][n_expt]
     TEST_INFO = df_expts['test_info'][n_expt]
     TEST_CASES = df_expts['test_cases'][n_expt]
     TEST_ROUNDS = df_expts['test_rounds'][n_expt]
     RESULTS_FOLDER = df_expts['results_folder'][n_expt]
-
     TEST_FILE = df_expts['test_file'][n_expt]
     TRAIN_SR = df_expts['train_sample_rate'][n_expt]
     TEST_SR = df_expts['test_sample_rate'][n_expt]
@@ -66,31 +74,19 @@ for n_expt in range(n_expts):
     df = pd.read_csv(DATA_FILE)
     n_records = len(df.index)
     l_noise = lnoise(ADD_NOISE, BREAKDOWN_CHANCE)
-    #VERSION = f'{ver_prefix}_{l_noise}_{WEAR_THRESHOLD}_{THRESHOLD_FACTOR}_{R3}_{EPISODES}_{MILLING_OPERATIONS_MAX}_'
     VERSION = f'{n_expt}_{ver_prefix}_{l_noise}_'
-    print('\n', 120*'-')
-    print(f'\n [{dt_t}] Experiment {n_expt}: {VERSION}')
-
-    model_file = f'models/RF_Model_{n_expt}_{ver_prefix}_{l_noise}_{dt_m}.mdl'
 
     METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’}
-    WEAR_THRESHOLD_NORMALIZED = 0.0 # normalized to the max wear threshold
-
-    # Policy network learning parameters
-    gamma = 0.99
-    alpha = 0.01
 
     CONSOLIDATED_METRICS_FILE = f'{RESULTS_FOLDER}/TEST_CONSOLIDATED_METRICS.csv'
     RESULTS_FILE = f'{RESULTS_FOLDER}/{VERSION}_test_results_{dt_d}_{dt_m}.csv'
     METRICS_FILE = f'{RESULTS_FOLDER}/{VERSION}_metrics.csv'
     EXPTS_REPORT = f'{RESULTS_FOLDER}/Experiment_Results_{dt_d}_{dt_m}.csv'
-
     print('\n- Columns added to results file: ', RESULTS_FILE)
     results = ['Date', 'Time', 'Round', 'Environment', 'Training_data', 'Wear_Threshold', 'Test_data', 'Algorithm', 'Episodes', 'Normal_cases', 'Normal_error',
                'Replace_cases', 'Replace_error', 'Overall_error',
                'Precision', 'Recall', 'F_Beta_0_5', 'F_Beta_0_75', 'F_1_Score']
     write_test_results(results, RESULTS_FILE)
-
 
     # ## Data pre-process
     # 1. Add noise
@@ -114,8 +110,9 @@ for n_expt in range(n_expts):
     df_normalized['ACTION_CODE'] = df['ACTION_CODE']
     print(f'- Tool wear data imported ({len(df.index)} records).')
 
-    # 4. Test file -or- create test file
-    if TRAIN_SR:
+
+    # 4. Down sample main data to create test set
+    if TEST_SR:
         # 4. Split into train and test
         df_train = downsample(df_normalized, TRAIN_SR)
         df_train.to_csv('TempTrain.csv')
@@ -126,24 +123,16 @@ for n_expt in range(n_expts):
         df_test = pd.read_csv('TempTest.csv')
         print(f'- Tool wear data split into train ({len(df_train.index)} records) and test ({len(df_test.index)} records).')
     else:
-        # 4. Split into train and test
         df_train = df_normalized
         df_test = pd.read_csv(TEST_FILE)
         print(f'* Separate test data provided: {TEST_FILE} - ({len(df_test.index)} records).')
 
     n_records = len(df_train.index)
-    x = [n for n in range(n_records)]
-    y1 = df_train['tool_wear']
-    y2 = df_train['ACTION_CODE']
-    wear_plot = f'{RESULTS_FOLDER}/{VERSION}_wear_plot.png'
-    title=f'Tool Wear (mm) data\n{VERSION}'
-    two_axes_plot(x, y1, y2, title=title, x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, file=wear_plot, threshold_org = WEAR_THRESHOLD_ORG_NORMALIZED, threshold=WEAR_THRESHOLD_NORMALIZED)
-
-
     # ## Milling Tool Environment -
     # 1. MillingTool_SS: Single state: tool_wear and time
     # 2. MillingTool_MS: Multie-state: force_x; force_y; force_z; vibration_x; vibration_y; vibration_z; acoustic_emission_rms; tool_wear
     # - Note: ACTION_CODE is only used for evaluation later (testing phase) and is NOT passed as part of the environment states
+
 
     if ENVIRONMENT_CLASS == 'SS':
         env = MillingTool_SS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
@@ -157,81 +146,12 @@ for n_expt in range(n_expts):
     else:
         print(' ERROR - initatizing environment')
 
-    # ## REINFORCE RL Algorithm
-    ### Main loop
-    print('\n* Train REINFORCE model...')
-    rewards_history = []
-    loss_history = []
-    training_stats = []
-
-    input_dim = env.observation_space.shape[0]
-    output_dim = env.action_space.n
-
-    agent_RF = Agent(input_dim, output_dim, alpha, gamma)
-
-    for episode in range(EPISODES):
-        state = env.reset()
-
-        # Sample a trajectory
-        for t in range(MILLING_OPERATIONS_MAX): # Max. milling operations desired
-            action = agent_RF.act(state)
-            state, reward, done, info = env.step(action)
-            agent_RF.rewards.append(reward)
-            #env.render()
-            if done:
-                # print('** DONE **', info)
-                break
-
-        # Learn during this episode
-        loss = agent_RF.learn() # train per episode
-        total_reward = sum(agent_RF.rewards)
-
-        # Record statistics for this episode
-        rewards_history.append(total_reward)
-        loss_history.append(loss.item()) # Extract values from list of torch items for plotting
-
-        # On-policy - so discard all data
-        agent_RF.onpolicy_reset()
-
-        if (episode%100 == 0):
-            # print(f'[{episode:04d}] Loss: {loss:>10.2f} | Reward: {total_reward:>10.2f} | Ep.length: {env.ep_length:04d}')
-            print(f'[{episode:04d}] Loss: {loss:>10.2e} | Reward: {total_reward:>10.2e} | Ep.length: {env.ep_length:04d}')
-
-
-    x = [i for i in range(EPISODES)]
-
-    ## Moving average for rewards
-    ma_window_size = 10
-    # # Convert error array to pandas series
-    rewards = pd.Series(rewards_history)
-    windows = rewards.rolling(ma_window_size)
-    moving_avg = windows.mean()
-    moving_avg_lst = moving_avg.tolist()
-    y1 = rewards
-    y2 = moving_avg_lst
-
-    filename = f'{RESULTS_FOLDER}/{VERSION}_Avg_episode_rewards.png'
-    two_variable_plot(x, y1, y2, 'Avg. rewards per episode', VERSION, 'Episode', 'Avg. Rewards', 'Moving Avg.', 50, filename)
-
-    # plot_error_bounds(x, y1)
-
-    filename = f'{RESULTS_FOLDER}/{VERSION}_Episode_Length.png'
-    single_axes_plot(x, env.ep_length_history, 'Episode length', VERSION, 'Episode', 'No of milling operations', 50, 0.0, filename)
-
-    filename = f'{RESULTS_FOLDER}/{VERSION}_Tool_Replacements.png'
-    single_axes_plot(x, env.ep_tool_replaced_history, 'Tool replacements per episode', VERSION, 'Episode', 'Replacements', 50, 0.0, filename)
-
     # ### Generate a balanced test set
     idx_replace_cases = df_test.index[df_test['ACTION_CODE'] >= 1.0]
     idx_normal_cases = df_test.index[df_test['ACTION_CODE'] < 1.0]
 
     # Process results
-    # eps = [i for i in range(EPISODES)]
-    # store_results(RF_TRAINING_FILE, training_round, eps, rewards_history, env.ep_tool_replaced_history)
-    print('\n- Test REINFORCE model...')
-    # print(80*'-')
-    # print(f'Algorithm\tNormal\terr.%\tReplace\terr.%\tOverall err.%')
-    # print(80*'-')
+    print(f'\n- Test PRE-TRAINED REINFORCE model: {MODEL_FILE}')
     avg_Pr = avg_Rc = avg_F1 = 0.0
 
     for test_round in range(TEST_ROUNDS):
@@ -263,11 +183,7 @@ for n_expt in range(n_expts):
 
     ## Add model training hyper parameters and save model, if metrics > 0.65
     if avg_Pr > 0.60 and avg_Rc > 0.60 and avg_F1 > 0.60:
-        print(f'\n*** REINFORCE model performance satisfactory. Saving model to {model_file} ***\n')
-        agent_RF.model_parameters = {'R1':R1, 'R2':R2, 'R3':R3, 'WEAR_THRESHOLD':WEAR_THRESHOLD, 'THRESHOLD_FACTOR':THRESHOLD_FACTOR, 'ADD_NOISE':ADD_NOISE, 'BREAKDOWN_CHANCE':BREAKDOWN_CHANCE, 'EPISODES':EPISODES, 'MILLING_OPERATIONS_MAX':MILLING_OPERATIONS_MAX}
-        save_model(agent_RF, model_file)
-        df_expts.loc[n_expt, 'model_file'] = model_file
-
+        df_expts.loc[n_expt, 'model_file_tested'] = MODEL_FILE
 
         # ## Stable-Baselines Algorithms
         print('* Train Stable-Baselines-3 A2C, DQN and PPO models...')

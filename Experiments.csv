@@ -1,7 +1,10 @@
 expt_n,environment,environment_info,data_file,R1,R2,R3,wear_threshold,threshold_factor,add_noise,breakdown_chance,episodes,milling_operations_max,version_prefix,test_info,test_cases,test_rounds,results_folder,test_file,train_sample_rate,test_sample_rate
-0,MS,PHM C04 Multi-variate NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.9,0,0,600,348,PHM_C04_MS,Separate test set.,40,5,results/07-Jun-2023,,100,70
-1,MS,PHM C04 Multi-variate NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.9,0,0,800,348,PHM_C04_MS,Separate test set.,40,5,results/07-Jun-2023,,100,70
-2,MS,PHM C04 Multi-variate NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.875,0,0,800,348,PHM_C04_MS,Separate test set.,40,5,results/07-Jun-2023,,100,70
-3,MS,PHM C04 Multi-variate NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.85,0,0,800,348,PHM_C04_MS,Separate test set.,40,5,results/07-Jun-2023,,100,70
-4,MS,PHM C04 Multi-variate NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.95,0,0,800,348,PHM_C04_MS,Separate test set.,40,5,results/07-Jun-2023,,100,70
-5,MS,PHM C04 Multi-variate NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.925,0,0,800,348,PHM_C04_MS,Separate test set.,40,5,results/07-Jun-2023,,100,70
+0,SS,PHM C01 Simple NBD,data\PHM_Tool_Wear_Data_C01_0p12.csv,1,-2,-40,0.12,0.95,0,0,800,348,PHM_C01_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+1,SS,PHM C01 Simple LBD,data\PHM_Tool_Wear_Data_C01_0p12.csv,1,-1,-100,0.12,0.9,1000,0.05,800,348,PHM_C01_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+2,SS,PHM C01 Simple HBD,data\PHM_Tool_Wear_Data_C01_0p12.csv,1,-1,-40,0.12,0.85,100,0.1,800,348,PHM_C01_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+3,SS,PHM C04 Simple NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.97,0,0,800,348,PHM_C04_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+4,SS,PHM C04 Simple LBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-40,0.098,0.85,1000,0.05,800,348,PHM_C04_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+5,SS,PHM C04 Simple HBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.9,100,0.1,800,348,PHM_C04_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+6,SS,PHM C06 Simple NBD,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-40,0.13,0.95,0,0,800,348,PHM_C06_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+7,SS,PHM C06 Simple LBD,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-40,0.13,0.95,1000,0.05,800,348,PHM_C06_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
+8,SS,PHM C06 Simple HBD,data\PHM_Tool_Wear_Data_C06_0p13.csv,1,-1,-40,0.13,0.9,100,0.1,800,348,PHM_C06_SS,Separate test set.,40,5,results/08-Jun-2023,,100,70
