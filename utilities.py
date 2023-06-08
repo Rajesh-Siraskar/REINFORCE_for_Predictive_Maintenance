@@ -2,11 +2,29 @@
 # ax.set_facecolor('#EFEFEF')
 
 import numpy as np
+import os
 import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 import datetime
 import pickle
+
+def clean_up_files(results_folder, version, dt_d, dt_m):
+    remove_files = []
+
+    remove_files.append(f'{results_folder}/{version}_test_results_{dt_d}_{dt_m}.csv')
+    remove_files.append(f'{results_folder}/{version}_metrics.csv')
+    remove_files.append(f'{results_folder}/{version}_wear_plot.png')
+    remove_files.append(f'{results_folder}/{version}_Avg_episode_rewards.png')
+    remove_files.append(f'{results_folder}/{version}_Episode_Length.png')
+    remove_files.append(f'{results_folder}/{version}_Tool_Replacements.png')
+    
+    for filename in remove_files:
+        if os.path.isfile(filename):
+            os.remove(filename)
+            print(f'--- Cleaning: {filename} deleted!')
+
+    print('--- Model performance not satisfactory. Files removed.')
 
 def save_model(model, filepath):
     pickle.dump(model, open(filepath, 'wb'))
@@ -17,7 +35,11 @@ def load_model(filepath):
     return (pickle.load(open(filepath, 'rb')))
 
 def lnoise(add_noise, breakdown_chance):
-    if add_noise == 1e3 and breakdown_chance == 0.05:
+    if add_noise == 1e4 and breakdown_chance == 0.05:
+        l = 'ELowNBD'
+    elif add_noise == 4e3 and breakdown_chance == 0.05:
+        l = 'VLowNBD'
+    elif add_noise == 1e3 and breakdown_chance == 0.05:
         l = 'LowNBD'
     elif add_noise == 1e2  and breakdown_chance == 0.10:
         l = 'HighNBD'

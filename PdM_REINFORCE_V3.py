@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# ## Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
-# Ver.10.0 Auto Experiment
-print ('\n ====== REINFORCE for Predictive Maintenance. Automated Experiments V.12.3 (Wear plot) ====== \n')
+# Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
+# V.3.0: Add cleaning up files. If the performance is not satisfactory -
+#           delete the files, also do not train and test SB models
+
+print ('\n ====== REINFORCE for Predictive Maintenance ======')
+print ('        V.3.0 08-Jun-2023 Auto clean files\n')
 print ('- Loading packages...')
 import datetime
+import os
 import numpy as np
 import pandas as pd
 from stable_baselines3.common.vec_env import DummyVecEnv
@@ -13,19 +17,26 @@ from stable_baselines3 import A2C, PPO, DQN
 
 from milling_tool_environment import MillingTool_SS_V3, MillingTool_MS_V3
 from utilities import compute_metrics, compute_metrics_simple, write_metrics_report, store_results, plot_learning_curve, single_axes_plot, lnoise
-from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_script, write_test_results, downsample, save_model, load_model
+from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_script, write_test_results, downsample, save_model, load_model, clean_up_files
 from reinforce_classes import PolicyNetwork, Agent
 
 # Auto experiment file structure
 print ('- Loading Experiments...')
 df_expts = pd.read_csv('Experiments.csv')
+df_expts['Pr'] = 0.0
+df_expts['Rc'] = 0.0
+df_expts['F1'] = 0.0
+df_expts['model_file'] = 'Not satisfactory'
+
 n_expts = len(df_expts.index)
+
+experiment_summary = []
 
 for n_expt in range(n_expts):
     dt = datetime.datetime.now()
     dt_d = dt.strftime('%d-%b-%Y')
     dt_t = dt.strftime('%H_%M_%S')
-    dt_m = dt.strftime('%H%M')
+    dt_m = dt.strftime('%d-%H%M')
 
     # Load experiment parameters
     ENVIRONMENT_CLASS = df_expts['environment'][n_expt]
@@ -54,10 +65,13 @@ for n_expt in range(n_expts):
     ## Read data
     df = pd.read_csv(DATA_FILE)
     n_records = len(df.index)
-    VERSION = f'{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{WEAR_THRESHOLD}_{THRESHOLD_FACTOR}_{R3}_{EPISODES}_{MILLING_OPERATIONS_MAX}_'
+    l_noise = lnoise(ADD_NOISE, BREAKDOWN_CHANCE)
+    #VERSION = f'{ver_prefix}_{l_noise}_{WEAR_THRESHOLD}_{THRESHOLD_FACTOR}_{R3}_{EPISODES}_{MILLING_OPERATIONS_MAX}_'
+    VERSION = f'{n_expt}_{ver_prefix}_{l_noise}_'
+    print('\n', 120*'-')
     print(f'\n [{dt_t}] Experiment {n_expt}: {VERSION}')
 
-    model_file = f'models/RF_Model_{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{dt_d}_{dt_m}.mdl'
+    model_file = f'models/RF_Model_{n_expt}_{ver_prefix}_{l_noise}_{dt_m}.mdl'
 
     METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’}
     WEAR_THRESHOLD_NORMALIZED = 0.0 # normalized to the max wear threshold
@@ -69,6 +83,7 @@ for n_expt in range(n_expts):
     CONSOLIDATED_METRICS_FILE = f'{RESULTS_FOLDER}/TEST_CONSOLIDATED_METRICS.csv'
     RESULTS_FILE = f'{RESULTS_FOLDER}/{VERSION}_test_results_{dt_d}_{dt_m}.csv'
     METRICS_FILE = f'{RESULTS_FOLDER}/{VERSION}_metrics.csv'
+    EXPTS_REPORT = f'{RESULTS_FOLDER}/Experiment_Results_{dt_d}_{dt_m}.csv'
 
     print('\n- Columns added to results file: ', RESULTS_FILE)
     results = ['Date', 'Time', 'Round', 'Environment', 'Training_data', 'Wear_Threshold', 'Test_data', 'Algorithm', 'Episodes', 'Normal_cases', 'Normal_error',
@@ -100,7 +115,6 @@ for n_expt in range(n_expts):
     print(f'- Tool wear data imported ({len(df.index)} records).')
 
     # 4. Test file -or- create test file
-    print(f'type {type(TRAIN_SR)} - {TRAIN_SR} - test file {TEST_FILE}')
     if TRAIN_SR:
         # 4. Split into train and test
         df_train = downsample(df_normalized, TRAIN_SR)
@@ -233,84 +247,110 @@ for n_expt in range(n_expts):
     avg_Pr = avg_Pr/TEST_ROUNDS
     avg_Rc = avg_Rc/TEST_ROUNDS
     avg_F1 = avg_F1/TEST_ROUNDS
-    print(f'Pr: {avg_Pr:0.3f} \t Rc: {avg_Rc:0.3f} \t F1:{avg_F1:0.3f}')
+
+    df_expts.loc[n_expt, 'Pr'] = avg_Pr
+    df_expts.loc[n_expt, 'Rc'] = avg_Rc
+    df_expts.loc[n_expt, 'F1'] = avg_F1
+
+    expt_summary = f'Expt. {n_expt}: {ENVIRONMENT_INFO} - {l_noise} Pr: {avg_Pr:0.3f} \t Rc: {avg_Rc:0.3f} \t F1:{avg_F1:0.3f}'
+    experiment_summary.append(expt_summary)
+    print(expt_summary)
+
     print(f'- REINFORCE Test results written to file: {RESULTS_FILE}.\n')
 
     ## Add model training hyper parameters and save model, if metrics > 0.65
-    if avg_Pr > 0.60 and avg_F1 > 0.60:
+    if avg_Pr > 0.60 and avg_Rc > 0.60 and avg_F1 > 0.60:
         print(f'\n*** REINFORCE model performance satisfactory. Saving model to {model_file} ***\n')
         agent_RF.model_parameters = {'R1':R1, 'R2':R2, 'R3':R3, 'WEAR_THRESHOLD':WEAR_THRESHOLD, 'THRESHOLD_FACTOR':THRESHOLD_FACTOR, 'ADD_NOISE':ADD_NOISE, 'BREAKDOWN_CHANCE':BREAKDOWN_CHANCE, 'EPISODES':EPISODES, 'MILLING_OPERATIONS_MAX':MILLING_OPERATIONS_MAX}
         save_model(agent_RF, model_file)
+        df_expts.loc[n_expt, 'model_file'] = model_file
 
-    # ## Stable-Baselines Algorithms
-    print('\n* Train Stable-Baselines-3 A2C, DQN and PPO models...')
 
-    algos = ['A2C','DQN','PPO']
-    SB_agents = []
+        # ## Stable-Baselines Algorithms
+        print('* Train Stable-Baselines-3 A2C, DQN and PPO models...')
 
-    for SB_ALGO in algos:
-        if SB_ALGO.upper() == 'A2C': agent_SB = A2C('MlpPolicy', env)
-        if SB_ALGO.upper() == 'DQN': agent_SB = DQN('MlpPolicy', env)
-        if SB_ALGO.upper() == 'PPO': agent_SB = PPO('MlpPolicy', env)
+        algos = ['A2C','DQN','PPO']
+        SB_agents = []
 
-        print(f'- Training Stable-Baselines-3 {SB_ALGO} algorithm...')
-        agent_SB.learn(total_timesteps=EPISODES)
-        SB_agents.append(agent_SB)
-        # print(f'- Save Stable-Baselines-3 model')
-        # model_file = f'models/{SB_ALGO}_{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{dt_d}_{dt_m}.mdl'
-        # save_model(agent_SB, model_file)
+        for SB_ALGO in algos:
+            if SB_ALGO.upper() == 'A2C': agent_SB = A2C('MlpPolicy', env)
+            if SB_ALGO.upper() == 'DQN': agent_SB = DQN('MlpPolicy', env)
+            if SB_ALGO.upper() == 'PPO': agent_SB = PPO('MlpPolicy', env)
 
-    n = 0
-    for agent_SB in SB_agents:
-        print(f'- Testing Stable-Baselines-3 {agent_SB} model...')
-        # print(80*'-')
-        # print(f'Algo.\tNormal\tErr.%\tReplace\tErr.%\tOverall err.%')
-        # print(80*'-')
-        for test_round in range(TEST_ROUNDS):
-            # Create test cases
-            idx_replace_cases = np.random.choice(idx_replace_cases, int(TEST_CASES/2), replace=False)
-            idx_normal_cases = np.random.choice(idx_normal_cases, int(TEST_CASES/2), replace=False)
-            test_cases = [*idx_normal_cases, *idx_replace_cases]
-            results = test_script(METRICS_METHOD, test_round, df_test, algos[n], EPISODES, env_test, ENVIRONMENT_INFO,
-                                  agent_SB, test_cases, TEST_INFO, DATA_FILE, WEAR_THRESHOLD, RESULTS_FILE)
-            write_test_results(results, RESULTS_FILE)
-            # end test loop
+            print(f'- Training Stable-Baselines-3 {SB_ALGO} algorithm...')
+            agent_SB.learn(total_timesteps=EPISODES)
+            SB_agents.append(agent_SB)
+            # print(f'- Save Stable-Baselines-3 model')
+            # model_file = f'models/{SB_ALGO}_{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{dt_d}_{dt_m}.mdl'
+            # save_model(agent_SB, model_file)
 
-        n += 1
-        # end SB agents loop
+        n = 0
+        for agent_SB in SB_agents:
+            print(f'- Testing Stable-Baselines-3 {agent_SB} model...')
+            # print(80*'-')
+            # print(f'Algo.\tNormal\tErr.%\tReplace\tErr.%\tOverall err.%')
+            # print(80*'-')
+            for test_round in range(TEST_ROUNDS):
+                # Create test cases
+                idx_replace_cases = np.random.choice(idx_replace_cases, int(TEST_CASES/2), replace=False)
+                idx_normal_cases = np.random.choice(idx_normal_cases, int(TEST_CASES/2), replace=False)
+                test_cases = [*idx_normal_cases, *idx_replace_cases]
+                results = test_script(METRICS_METHOD, test_round, df_test, algos[n], EPISODES, env_test, ENVIRONMENT_INFO,
+                                      agent_SB, test_cases, TEST_INFO, DATA_FILE, WEAR_THRESHOLD, RESULTS_FILE)
+                write_test_results(results, RESULTS_FILE)
+                # end test loop
 
-    ### Create a consolidated algorithm wise metrics summary
+            n += 1
+            # end SB agents loop
 
-    print(f'* Test Report: Algorithm level consolidated metrics will be written to: {METRICS_FILE}.')
 
-    header_columns = [VERSION]
-    write_test_results(header_columns, METRICS_FILE)
-    header_columns = ['Date', 'Time', 'Environment', 'Noise', 'Breakdown_chance', 'Train_data', 'env.R1', 'env.R2', 'env.R3', 'Wear threshold', 'Look-ahead Factor', 'Episodes', 'Terminate on', 'Test_info', 'Test_cases', 'Metrics_method', 'Version']
-    write_test_results(header_columns, METRICS_FILE)
+        ### Create a consolidated algorithm wise metrics summary
 
-    dt_t = dt.strftime('%H:%M:%S')
-    noise_info = 'None' if ADD_NOISE == 0 else (1/ADD_NOISE)
-    header_info = [dt_d, dt_t, ENVIRONMENT_INFO, noise_info, BREAKDOWN_CHANCE, DATA_FILE, env.R1, env.R2, env.R3, WEAR_THRESHOLD, THRESHOLD_FACTOR, EPISODES, MILLING_OPERATIONS_MAX, TEST_INFO, TEST_CASES, METRICS_METHOD, VERSION]
-    write_test_results(header_info, METRICS_FILE)
-    write_test_results([], METRICS_FILE) # leave a blank line
+        print(f'* Test Report: Algorithm level consolidated metrics will be written to: {METRICS_FILE}.')
 
-    print('- Experiment related meta info written.')
+        header_columns = [VERSION]
+        write_test_results(header_columns, METRICS_FILE)
+        header_columns = ['Date', 'Time', 'Environment', 'Noise', 'Breakdown_chance', 'Train_data', 'env.R1', 'env.R2', 'env.R3', 'Wear threshold', 'Look-ahead Factor', 'Episodes', 'Terminate on', 'Test_info', 'Test_cases', 'Metrics_method', 'Version']
+        write_test_results(header_columns, METRICS_FILE)
 
-    df_algo_results = pd.read_csv(RESULTS_FILE)
-    # algo_metrics = compute_metrics_simple(df_algo_results)
-    algo_metrics = compute_metrics(df_algo_results)
+        dt_t = dt.strftime('%H:%M:%S')
+        noise_info = 'None' if ADD_NOISE == 0 else (1/ADD_NOISE)
+        header_info = [dt_d, dt_t, ENVIRONMENT_INFO, noise_info, BREAKDOWN_CHANCE, DATA_FILE, env.R1, env.R2, env.R3, WEAR_THRESHOLD, THRESHOLD_FACTOR, EPISODES, MILLING_OPERATIONS_MAX, TEST_INFO, TEST_CASES, METRICS_METHOD, VERSION]
+        write_test_results(header_info, METRICS_FILE)
+        write_test_results([], METRICS_FILE) # leave a blank line
 
-    write_metrics_report(algo_metrics, METRICS_FILE, 4)
-    write_test_results([], METRICS_FILE) # leave a blank line
-    print('- Algorithm level consolidated metrics reported to file.')
+        print('- Experiment related meta info written.')
 
-    write_test_results(header_columns, CONSOLIDATED_METRICS_FILE)
-    write_test_results(header_info, CONSOLIDATED_METRICS_FILE)
-    write_test_results([], CONSOLIDATED_METRICS_FILE) # leave a blank line
-    write_metrics_report(algo_metrics, CONSOLIDATED_METRICS_FILE, 4)
-    write_test_results([120*'-'], CONSOLIDATED_METRICS_FILE) # leave a blank line
-    print(f'- {CONSOLIDATED_METRICS_FILE} file updated.')
-    print(algo_metrics.round(3))
-    print(f'- End Experiment {n_expt}.\n')
+        df_algo_results = pd.read_csv(RESULTS_FILE)
+        # algo_metrics = compute_metrics_simple(df_algo_results)
+        algo_metrics = compute_metrics(df_algo_results)
 
-print('\n\n ================= END OF PROGRAM =================')
+        write_metrics_report(algo_metrics, METRICS_FILE, 4)
+        write_test_results([], METRICS_FILE) # leave a blank line
+        print('- Algorithm level consolidated metrics reported to file.')
+
+        write_test_results(header_columns, CONSOLIDATED_METRICS_FILE)
+        write_test_results(header_info, CONSOLIDATED_METRICS_FILE)
+        write_test_results([], CONSOLIDATED_METRICS_FILE) # leave a blank line
+        write_metrics_report(algo_metrics, CONSOLIDATED_METRICS_FILE, 4)
+        write_test_results([120*'-'], CONSOLIDATED_METRICS_FILE) # leave a blank line
+        print(f'- {CONSOLIDATED_METRICS_FILE} file updated.')
+        print(algo_metrics.round(3))
+        print(f'- End Experiment {n_expt}')
+    else:
+        clean_up_files(RESULTS_FOLDER, VERSION, dt_d, dt_m)
+
+# end for all experiments
+
+df_expts.to_csv(EXPTS_REPORT)
+print(120*'-')
+print('SUMMARY REPORT')
+print(120*'-')
+for e in experiment_summary:
+    print(e)
+print(120*'=')
+
+if os.path.isfile('TempTrain.csv'):
+    os.remove('TempTrain.csv')
+if os.path.isfile('TempTest.csv'):
+    os.remove('TempTest.csv')
