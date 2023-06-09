@@ -284,8 +284,8 @@ for n_expt in range(n_expts):
             agent_SB.learn(total_timesteps=EPISODES)
             SB_agents.append(agent_SB)
             # print(f'- Save Stable-Baselines-3 model')
-            # model_file = f'models/{SB_ALGO}_{ver_prefix}_{lnoise(ADD_NOISE, BREAKDOWN_CHANCE)}_{dt_d}_{dt_m}.mdl'
-            # save_model(agent_SB, model_file)
+            # model_file_SB = f'models/{SB_ALGO}_{n_expt}_{ver_prefix}_{l_noise}_{dt_m}.mdl'
+            # save_model(agent_SB, model_file_SB)
 
         n = 0
         for agent_SB in SB_agents:
@@ -321,7 +321,6 @@ for n_expt in range(n_expts):
         header_info = [dt_d, dt_t, ENVIRONMENT_INFO, noise_info, BREAKDOWN_CHANCE, DATA_FILE, env.R1, env.R2, env.R3, WEAR_THRESHOLD, THRESHOLD_FACTOR, EPISODES, MILLING_OPERATIONS_MAX, TEST_INFO, TEST_CASES, METRICS_METHOD, VERSION]
         write_test_results(header_info, METRICS_FILE)
         write_test_results([], METRICS_FILE) # leave a blank line
-
         print('- Experiment related meta info written.')
 
         df_algo_results = pd.read_csv(RESULTS_FILE)

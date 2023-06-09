@@ -9,6 +9,66 @@ import matplotlib.pyplot as plt
 import datetime
 import pickle
 
+def add_performance_columns(df_expts):
+    df_expts['RF_Pr'] = 0.0
+    df_expts['RF_Pr_sd'] = 0.0
+    df_expts['RF_Rc'] = 0.0
+    df_expts['RF_Rc_sd'] = 0.0
+    df_expts['RF_F1'] = 0.0
+    df_expts['RF_F1_sd'] = 0.0
+
+    df_expts['A2C_Pr'] = 0.0
+    df_expts['A2C_Pr_sd'] = 0.0
+    df_expts['A2C_Rc'] = 0.0
+    df_expts['A2C_Rc_sd'] = 0.0
+    df_expts['A2C_F1'] = 0.0
+    df_expts['A2C_F1_sd'] = 0.0
+
+    df_expts['DQN_Pr'] = 0.0
+    df_expts['DQN_Pr_sd'] = 0.0
+    df_expts['DQN_Rc'] = 0.0
+    df_expts['DQN_Rc_sd'] = 0.0
+    df_expts['DQN_F1'] = 0.0
+    df_expts['DQN_F1_sd'] = 0.0
+
+    df_expts['PPO_Pr'] = 0.0
+    df_expts['PPO_Pr_sd'] = 0.0
+    df_expts['PPO_Rc'] = 0.0
+    df_expts['PPO_Rc_sd'] = 0.0
+    df_expts['PPO_F1'] = 0.0
+    df_expts['PPO_F1_sd'] = 0.0
+
+    return(df_expts)
+
+def summary_performance_metrics(df_expts, n_expt, algo_metrics):
+    df_expts.loc[n_expt, 'RF_Pr'] = algo_metrics['Precision']['mean']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_Pr_sd'] = algo_metrics['Precision']['std']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_Rc'] = algo_metrics['Recall']['mean']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_Rc_sd'] = algo_metrics['Recall']['std']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_F1'] = algo_metrics['F_1_Score']['mean']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_F1_sd'] = algo_metrics['F_1_Score']['std']['REINFORCE']
+
+    df_expts.loc[n_expt, 'A2C_Pr'] = algo_metrics['Precision']['mean']['A2C']
+    df_expts.loc[n_expt, 'A2C_Pr_sd'] = algo_metrics['Precision']['std']['A2C']
+    df_expts.loc[n_expt, 'A2C_Rc'] = algo_metrics['Recall']['mean']['A2C']
+    df_expts.loc[n_expt, 'A2C_Rc_sd'] = algo_metrics['Recall']['std']['A2C']
+    df_expts.loc[n_expt, 'A2C_F1'] = algo_metrics['F_1_Score']['mean']['A2C']
+    df_expts.loc[n_expt, 'A2C_F1_sd'] = algo_metrics['F_1_Score']['std']['A2C']
+
+    df_expts.loc[n_expt, 'DQN_Pr'] = algo_metrics['Precision']['mean']['DQN']
+    df_expts.loc[n_expt, 'DQN_Pr_sd'] = algo_metrics['Precision']['std']['DQN']
+    df_expts.loc[n_expt, 'DQN_Rc'] = algo_metrics['Recall']['mean']['DQN']
+    df_expts.loc[n_expt, 'DQN_Rc_sd'] = algo_metrics['Recall']['std']['DQN']
+    df_expts.loc[n_expt, 'DQN_F1'] = algo_metrics['F_1_Score']['mean']['DQN']
+    df_expts.loc[n_expt, 'DQN_F1_sd'] = algo_metrics['F_1_Score']['std']['DQN']
+
+    df_expts.loc[n_expt, 'PPO_Pr'] = algo_metrics['Precision']['mean']['PPO']
+    df_expts.loc[n_expt, 'PPO_Pr_sd'] = algo_metrics['Precision']['std']['PPO']
+    df_expts.loc[n_expt, 'PPO_Rc'] = algo_metrics['Recall']['mean']['PPO']
+    df_expts.loc[n_expt, 'PPO_Rc_sd'] = algo_metrics['Recall']['std']['PPO']
+    df_expts.loc[n_expt, 'PPO_F1'] = algo_metrics['F_1_Score']['mean']['PPO']
+    df_expts.loc[n_expt, 'PPO_F1_sd'] = algo_metrics['F_1_Score']['std']['PPO']
+
 def clean_up_files(results_folder, version, dt_d, dt_m):
     remove_files = []
 
@@ -18,7 +78,7 @@ def clean_up_files(results_folder, version, dt_d, dt_m):
     remove_files.append(f'{results_folder}/{version}_Avg_episode_rewards.png')
     remove_files.append(f'{results_folder}/{version}_Episode_Length.png')
     remove_files.append(f'{results_folder}/{version}_Tool_Replacements.png')
-    
+
     for filename in remove_files:
         if os.path.isfile(filename):
             os.remove(filename)
