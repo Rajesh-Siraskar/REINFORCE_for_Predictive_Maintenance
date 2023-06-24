@@ -10,3 +10,12 @@
     - Complex environment with features from the PHM 2010 data-set
 
 - Metrics
+
+----------------------------------------------------------------------------------------
+### Test reproducibility
+
+- Test on another laptop
+- Clone git repo
+- Run test on models and publish results
+
+
