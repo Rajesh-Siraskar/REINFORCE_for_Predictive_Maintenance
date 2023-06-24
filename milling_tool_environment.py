@@ -31,13 +31,17 @@ import pandas as pd
 import numpy as np
 
 
-class MillingTool_MS_V4(gym.Env):
+# *************************
+# CODE REVIEW
+# *************************
+## Single variable State V.2.0
+class MillingTool_SS_NT(gym.Env):
     """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
 
     metadata = {"render.modes": ["human"]}
 
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
-        print(f'** -- Multi-variate state V4 env. *Tool-wear NOT a feature* R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
+        print(f'** -- Single-variate env. Terminate on (1) tool breakdown (2) data-end (3) milling operations end.  R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
         # Machine data frame properties
         self.df = df
@@ -68,13 +72,8 @@ class MillingTool_MS_V4(gym.Env):
         self.max_feature = 1.0
 
         # Define state and action limits
-        self.low_state = np.array([self.min_feature, self.min_feature, self.min_feature,
-                                   self.min_feature, self.min_feature, self.min_feature,
-                                   self.min_feature, self.min_feature], dtype=np.float32)
-
-        self.high_state = np.array([self.max_feature, self.max_feature, self.max_feature,
-                                    self.max_feature, self.max_feature, self.max_feature,
-                                    self.max_feature, self.max_feature], dtype=np.float32)
+        self.low_state = np.array([self.min_feature, self.min_feature], dtype=np.float32)
+        self.high_state = np.array([self.max_feature, self.max_feature], dtype=np.float32)
 
         # Observation and action spaces
         self.action_space = spaces.Discrete(2)
@@ -87,7 +86,8 @@ class MillingTool_MS_V4(gym.Env):
         """
         # Get current observation from environment
         self.state = self._get_observation(self.df_index)
-        tool_wear = self.state[0]
+        time_step = self.state[0]
+        tool_wear = self.state[1]
 
         # Add white noise for robustness
         # if self.add_noise:
@@ -134,6 +134,7 @@ class MillingTool_MS_V4(gym.Env):
 
             if self.df_index > (self.df_length-2):
                 self.df_index = -1
+                terminated = True
                 info = {'data_index':'Data over'}
 
         # We can now read the next state, for agent's policy to predict the "Action"
@@ -142,17 +143,10 @@ class MillingTool_MS_V4(gym.Env):
 
         return state_, self.reward, terminated, info
 
-    # force_x; force_y; force_z; vibration_x; vibration_y; vibration_z; acoustic_emission_rms; tool_wear
     def _get_observation(self, index):
         next_state = np.array([
-            self.df['tool_wear'][index],
-            self.df['force_x'][index],
-            self.df['force_y'][index],
-            self.df['force_z'][index],
-            self.df['vibration_x'][index],
-            self.df['vibration_y'][index],
-            self.df['vibration_z'][index],
-            self.df['acoustic_emission_rms'][index]
+            self.df['time'][index],
+            self.df['tool_wear'][index]
         ], dtype=np.float32)
 
         return next_state

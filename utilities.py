@@ -9,7 +9,56 @@ import matplotlib.pyplot as plt
 import datetime
 import pickle
 
+# Add f-beta score and also separate out SDs
 def add_performance_columns(df_expts):
+
+    # RF metrics
+    df_expts['RF_Pr'] = 0.0
+    df_expts['RF_Rc'] = 0.0
+    df_expts['RF_F1'] = 0.0
+    df_expts['RF_F05'] = 0.0
+
+    df_expts['RF_Pr_sd'] = 0.0
+    df_expts['RF_Rc_sd'] = 0.0
+    df_expts['RF_F1_sd'] = 0.0
+    df_expts['RF_F05_sd'] = 0.0
+
+    # A2C metrics
+    df_expts['A2C_Pr'] = 0.0
+    df_expts['A2C_Rc'] = 0.0
+    df_expts['A2C_F1'] = 0.0
+    df_expts['A2C_F05'] = 0.0
+
+    df_expts['A2C_Pr_sd'] = 0.0
+    df_expts['A2C_Rc_sd'] = 0.0
+    df_expts['A2C_F1_sd'] = 0.0
+    df_expts['A2C_F05_sd'] = 0.0
+
+    # DQN metrics
+    df_expts['DQN_Pr'] = 0.0
+    df_expts['DQN_Rc'] = 0.0
+    df_expts['DQN_F1'] = 0.0
+    df_expts['DQN_F05'] = 0.0
+
+    df_expts['DQN_Pr_sd'] = 0.0
+    df_expts['DQN_Rc_sd'] = 0.0
+    df_expts['DQN_F1_sd'] = 0.0
+    df_expts['DQN_F05_sd'] = 0.0
+
+    # PPO metrics
+    df_expts['PPO_Pr'] = 0.0
+    df_expts['PPO_Rc'] = 0.0
+    df_expts['PPO_F1'] = 0.0
+    df_expts['PPO_F05'] = 0.0
+
+    df_expts['PPO_Pr_sd'] = 0.0
+    df_expts['PPO_Rc_sd'] = 0.0
+    df_expts['PPO_F1_sd'] = 0.0
+    df_expts['PPO_F05_sd'] = 0.0
+
+    return(df_expts)
+
+def add_performance_columns_V1(df_expts):
     df_expts['RF_Pr'] = 0.0
     df_expts['RF_Pr_sd'] = 0.0
     df_expts['RF_Rc'] = 0.0
@@ -47,6 +96,8 @@ def summary_performance_metrics(df_expts, n_expt, algo_metrics):
     df_expts.loc[n_expt, 'RF_Rc_sd'] = algo_metrics['Recall']['std']['REINFORCE']
     df_expts.loc[n_expt, 'RF_F1'] = algo_metrics['F_1_Score']['mean']['REINFORCE']
     df_expts.loc[n_expt, 'RF_F1_sd'] = algo_metrics['F_1_Score']['std']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_F05'] = algo_metrics['F_Beta_0_5']['mean']['REINFORCE']
+    df_expts.loc[n_expt, 'RF_F05_sd'] = algo_metrics['F_Beta_0_5']['std']['REINFORCE']
 
     df_expts.loc[n_expt, 'A2C_Pr'] = algo_metrics['Precision']['mean']['A2C']
     df_expts.loc[n_expt, 'A2C_Pr_sd'] = algo_metrics['Precision']['std']['A2C']
@@ -54,6 +105,8 @@ def summary_performance_metrics(df_expts, n_expt, algo_metrics):
     df_expts.loc[n_expt, 'A2C_Rc_sd'] = algo_metrics['Recall']['std']['A2C']
     df_expts.loc[n_expt, 'A2C_F1'] = algo_metrics['F_1_Score']['mean']['A2C']
     df_expts.loc[n_expt, 'A2C_F1_sd'] = algo_metrics['F_1_Score']['std']['A2C']
+    df_expts.loc[n_expt, 'A2C_F05'] = algo_metrics['F_Beta_0_5']['mean']['A2C']
+    df_expts.loc[n_expt, 'A2C_F05_sd'] = algo_metrics['F_Beta_0_5']['std']['A2C']
 
     df_expts.loc[n_expt, 'DQN_Pr'] = algo_metrics['Precision']['mean']['DQN']
     df_expts.loc[n_expt, 'DQN_Pr_sd'] = algo_metrics['Precision']['std']['DQN']
@@ -61,6 +114,8 @@ def summary_performance_metrics(df_expts, n_expt, algo_metrics):
     df_expts.loc[n_expt, 'DQN_Rc_sd'] = algo_metrics['Recall']['std']['DQN']
     df_expts.loc[n_expt, 'DQN_F1'] = algo_metrics['F_1_Score']['mean']['DQN']
     df_expts.loc[n_expt, 'DQN_F1_sd'] = algo_metrics['F_1_Score']['std']['DQN']
+    df_expts.loc[n_expt, 'DQN_F05'] = algo_metrics['F_Beta_0_5']['mean']['DQN']
+    df_expts.loc[n_expt, 'DQN_F05_sd'] = algo_metrics['F_Beta_0_5']['std']['DQN']
 
     df_expts.loc[n_expt, 'PPO_Pr'] = algo_metrics['Precision']['mean']['PPO']
     df_expts.loc[n_expt, 'PPO_Pr_sd'] = algo_metrics['Precision']['std']['PPO']
@@ -68,6 +123,8 @@ def summary_performance_metrics(df_expts, n_expt, algo_metrics):
     df_expts.loc[n_expt, 'PPO_Rc_sd'] = algo_metrics['Recall']['std']['PPO']
     df_expts.loc[n_expt, 'PPO_F1'] = algo_metrics['F_1_Score']['mean']['PPO']
     df_expts.loc[n_expt, 'PPO_F1_sd'] = algo_metrics['F_1_Score']['std']['PPO']
+    df_expts.loc[n_expt, 'PPO_F05'] = algo_metrics['F_Beta_0_5']['mean']['PPO']
+    df_expts.loc[n_expt, 'PPO_F05_sd'] = algo_metrics['F_Beta_0_5']['std']['PPO']
 
 def clean_up_files(results_folder, version, dt_d, dt_m):
     remove_files = []

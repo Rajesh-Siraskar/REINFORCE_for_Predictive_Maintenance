@@ -3,9 +3,11 @@ __pycache__/
 .ipynb_checkpoints
 .ipynb_checkpoints/
 **/.ipynb_checkpoints
+tensorboard/
 results/
 storage/
 storage_experiments/
 stable_versions/
 models - 06-Jun-Safe/
+*.bat
 Temp*

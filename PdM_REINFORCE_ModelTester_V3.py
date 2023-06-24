@@ -4,23 +4,27 @@
 # Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
 # V.1.0: Running model tests with pre-trained models
 
-print (' ======    REINFORCE for Predictive Maintenance    ======')
-print (' ====== V.1.5 09-Jun-2023. Resolve bug. DQN key error ======\n')
+print (' ====== REINFORCE for Predictive Maintenance V.3.6 20-Jun-2023 ======')
+print (' * Change log * Add F-beta scores to summary file. 40 x 10 test rounds\n')
 print ('- Loading packages...')
 import datetime
 import os
+
 import pickle
 import numpy as np
 import pandas as pd
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import A2C, PPO, DQN
-
-from milling_tool_environment import MillingTool_SS_V3, MillingTool_MS_V3
+from stable_baselines3.common.monitor import Monitor
+from milling_tool_environment import MillingTool_SS_NT, MillingTool_MS_V3
 from utilities import compute_metrics, compute_metrics_simple, write_metrics_report, store_results, plot_learning_curve, single_axes_plot, lnoise
 from utilities import two_axes_plot, two_variable_plot, plot_error_bounds, test_script, write_test_results, downsample, save_model, load_model, clean_up_files
 from utilities import add_performance_columns, summary_performance_metrics
 
 from reinforce_classes import PolicyNetwork, Agent
+
+total_timesteps = 10_000 # SB-3 episodes
+logdir = './tensorboard'
 
 # Auto experiment file structure
 print ('- Loading pre-trained PdM models...')
@@ -77,7 +81,7 @@ for n_expt in range(n_expts):
     df = pd.read_csv(DATA_FILE)
     n_records = len(df.index)
     l_noise = lnoise(ADD_NOISE, BREAKDOWN_CHANCE)
-    VERSION = f'{n_expt}_{ver_prefix}_{l_noise}_'
+    VERSION = f'{n_expt}_{ver_prefix}_10K_{l_noise}_'
 
     METRICS_METHOD = 'binary' # average method = {‘micro’, ‘macro’, ‘samples’, ‘weighted’, ‘binary’}
 
@@ -138,16 +142,14 @@ for n_expt in range(n_expts):
 
 
     if ENVIRONMENT_CLASS == 'SS':
-        env = MillingTool_SS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-        env_test = MillingTool_SS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+        env = MillingTool_SS_NT(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+        env_test = MillingTool_SS_NT(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
     elif ENVIRONMENT_CLASS == 'MS':
         env = MillingTool_MS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
         env_test = MillingTool_MS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-    elif ENVIRONMENT_CLASS == 'MS-V4':
-        env = MillingTool_MS_V4(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-        env_test = MillingTool_MS_V4(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
     else:
         print(' ERROR - initatizing environment')
+
 
     # ### Generate a balanced test set
     idx_replace_cases = df_test.index[df_test['ACTION_CODE'] >= 1.0]
@@ -174,9 +176,11 @@ for n_expt in range(n_expts):
     avg_Rc = avg_Rc/TEST_ROUNDS
     avg_F1 = avg_F1/TEST_ROUNDS
 
+    print('\n',120*'=')
     expt_summary = f'   Expt. {n_expt}: {ENVIRONMENT_INFO} - {l_noise} Pr: {avg_Pr:0.3f} \t Rc: {avg_Rc:0.3f} \t F1:{avg_F1:0.3f}'
     experiment_summary.append(expt_summary)
     print(expt_summary)
+    print(120*'=','\n')
 
     print(f'- REINFORCE Test results written to file: {RESULTS_FILE}.\n')
 
@@ -186,15 +190,33 @@ for n_expt in range(n_expts):
     # ## Stable-Baselines Algorithms
     print('* Train Stable-Baselines-3 A2C, DQN and PPO models...')
 
+    # For stable_baselines3 algos - we run for a total timesteps of EPISODES*MILLING_OPERATIONS_MAX
+    # total_timesteps = EPISODES*MILLING_OPERATIONS_MAX
+
+    # Enable tensorboard rewards and loss plots
+    env = Monitor(env, logdir, allow_early_resets=True)
+
     algos = ['A2C','DQN','PPO']
     SB_agents = []
     for SB_ALGO in algos:
+        tb_dir = f'{logdir}/{total_timesteps}-{SB_ALGO}'
+        # if SB_ALGO.upper() == 'A2C': agent_SB = A2C('MlpPolicy', env, tensorboard_log=logdir)
+        # if SB_ALGO.upper() == 'DQN': agent_SB = DQN('MlpPolicy', env, tensorboard_log=logdir)
+        # if SB_ALGO.upper() == 'PPO': agent_SB = PPO('MlpPolicy', env, tensorboard_log=logdir)
+
         if SB_ALGO.upper() == 'A2C': agent_SB = A2C('MlpPolicy', env)
         if SB_ALGO.upper() == 'DQN': agent_SB = DQN('MlpPolicy', env)
         if SB_ALGO.upper() == 'PPO': agent_SB = PPO('MlpPolicy', env)
 
         print(f'- Training Stable-Baselines-3 {SB_ALGO} algorithm...')
-        agent_SB.learn(total_timesteps=EPISODES)
+        if ENVIRONMENT_CLASS == 'SS':
+            env = MillingTool_SS_NT(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+        elif ENVIRONMENT_CLASS == 'MS':
+            env = MillingTool_MS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+        else:
+            print(' ERROR - initatizing environment')
+
+        agent_SB.learn(total_timesteps=total_timesteps)
         SB_agents.append(agent_SB)
 
     n = 0
@@ -250,8 +272,12 @@ for n_expt in range(n_expts):
     print(f'- Updating summary performance metrics.')
     summary_performance_metrics(df_expts, n_expt, algo_metrics)
 
+    print(f'SB-3 Episodes: {total_timesteps}\n')
     print(algo_metrics.round(3))
     print(f'- End Experiment {n_expt}')
+
+    # Remove the individual files
+    # clean_up_files(RESULTS_FOLDER, VERSION, dt_d, dt_m)
 else:
     clean_up_files(RESULTS_FOLDER, VERSION, dt_d, dt_m)
 

@@ -139,7 +139,7 @@ class Agent():
         for t in reversed(range(T)):
             future_returns = self.rewards[t] + self.gamma*future_returns
             returns[t] = future_returns
-
+            
         returns = torch.tensor(returns)
         log_probs = torch.stack(self.log_probs)
         
