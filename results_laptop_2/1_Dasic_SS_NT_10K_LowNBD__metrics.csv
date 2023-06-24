@@ -1,0 +1,12 @@
+1_Dasic_SS_NT_10K_LowNBD_
+Date,Time,Environment,Noise,Breakdown_chance,Train_data,env.R1,env.R2,env.R3,Wear threshold,Look-ahead Factor,Episodes,Terminate on,Test_info,Test_cases,Metrics_method,Version
+24-Jun-2023,23:41:27,Simulated Dasic 2006 - simple (NT) state - LBD-SS,0.001,0.05,data\Simulated_Dasic_2006_Tool_Wear_Model_Train.csv,1,-1,-100,3,1,800,121,Separate test set.,40,binary,1_Dasic_SS_NT_10K_LowNBD_
+
+,Precision,Precision,Recall,Recall,F_Beta_0_5,F_Beta_0_5,F_Beta_0_75,F_Beta_0_75,F_1_Score,F_1_Score,Normal_error,Replace_error,Overall_error
+,mean,std,mean,std,mean,std,mean,std,mean,std,mean,mean,mean
+Algorithm,,,,,,,,,,,,,
+A2C,0.5234,0.1162,0.475,0.1379,0.5108,0.1172,0.502,0.1197,0.495,0.1228,0.425,0.525,0.475
+DQN,0.4332,0.0098,0.745,0.0158,0.4728,0.0103,0.51,0.0109,0.5478,0.0115,0.975,0.255,0.615
+PPO,0.18,0.2289,0.04,0.0459,0.104,0.1225,0.0785,0.0911,0.0648,0.0748,0.125,0.96,0.5425
+REINFORCE,0.9571,0.0262,0.985,0.0242,0.9623,0.0205,0.9666,0.0171,0.9705,0.0156,0.045,0.015,0.03
+
