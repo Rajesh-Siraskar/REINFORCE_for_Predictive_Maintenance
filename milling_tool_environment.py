@@ -36,12 +36,14 @@ import numpy as np
 # *************************
 ## Single variable State V.2.0
 class MillingTool_SS_NT(gym.Env):
-    """Custom Milling Tool Wear Environment that follows the Open AI gym interface."""
+    """Custom Milling Tool Wear Environment that follows the Open AI gym interface.
+    Single-variate env. Terminate on (1) tool breakdown (2) data-end (3) milling operations end.
+    """
 
     metadata = {"render.modes": ["human"]}
 
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
-        print(f'** -- Single-variate env. Terminate on (1) tool breakdown (2) data-end (3) milling operations end.  R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
+        print(f'** -- Single-variate env. wear_threshold: {wear_threshold} R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
         # Machine data frame properties
         self.df = df
@@ -183,7 +185,7 @@ class MillingTool_MS_V3(gym.Env):
     metadata = {"render.modes": ["human"]}
 
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
-        print(f'** -- Multi-variate state V3 env. R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
+        print(f'** -- Multi-variate state V3 env. wear_threshold: {wear_threshold} R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
         # Machine data frame properties
         self.df = df

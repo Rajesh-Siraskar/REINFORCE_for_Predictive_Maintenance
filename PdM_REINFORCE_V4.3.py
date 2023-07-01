@@ -9,7 +9,7 @@ MIN_MODEL_PERFORMANCE = -1.0
 SB3_EPISODES = 10_000
 
 print ('\n ====== REINFORCE for Predictive Maintenance ======')
-print ('        V.4.3 29-Jun-2023 Model with f1 \n')
+print ('        V.4.3 01-Jul-2023 -- Look Ahead Factor -- do not apply when testing the model \n')
 print ('- Loading packages...')
 from datetime import datetime
 import time
@@ -165,13 +165,10 @@ for n_tr_round in range(TRAINING_ROUNDS):
 
         if ENVIRONMENT_CLASS == 'SS':
             env = MillingTool_SS_NT(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-            env_test = MillingTool_SS_NT(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+            env_test = MillingTool_SS_NT(df_test, WEAR_THRESHOLD_ORG_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
         elif ENVIRONMENT_CLASS == 'MS':
             env = MillingTool_MS_V3(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-            env_test = MillingTool_MS_V3(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-        elif ENVIRONMENT_CLASS == 'MS-V4':
-            env = MillingTool_MS_V4(df_train, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
-            env_test = MillingTool_MS_V4(df_test, WEAR_THRESHOLD_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
+            env_test = MillingTool_MS_V3(df_test, WEAR_THRESHOLD_ORG_NORMALIZED, MILLING_OPERATIONS_MAX, ADD_NOISE, BREAKDOWN_CHANCE, R1, R2, R3)
         else:
             print(' ERROR - initatizing environment')
 
