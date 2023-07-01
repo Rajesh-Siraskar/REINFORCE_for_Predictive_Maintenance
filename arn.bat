@@ -8,6 +8,6 @@ set pydir=D:\Rajesh\ResearchLab\RL_for_PdM\REINFORCE_Tool_Replace_Policy
 rem SETLOCAL
 cd %pydir%
 echo In REINFORCE_Tool_Replace_Policy folder
-echo Executing Python code - PdM_REINFORCE_V4.py
-python PdM_REINFORCE_V4.py
+echo Executing Python code - PdM_REINFORCE_V4.2.py
+python PdM_REINFORCE_V4.2.py
 rem ENDLOCAL

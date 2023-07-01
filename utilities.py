@@ -129,7 +129,7 @@ def summary_performance_metrics(df_expts, n_expt, algo_metrics):
 def clean_up_files(results_folder, version, dt_d, dt_m):
     remove_files = []
 
-    remove_files.append(f'{results_folder}/{version}_test_results_{dt_d}_{dt_m}.csv')
+    remove_files.append(f'{results_folder}/{version}_test_results_{dt_m}.csv')
     remove_files.append(f'{results_folder}/{version}_metrics.csv')
     remove_files.append(f'{results_folder}/{version}_wear_plot.png')
     remove_files.append(f'{results_folder}/{version}_Avg_episode_rewards.png')

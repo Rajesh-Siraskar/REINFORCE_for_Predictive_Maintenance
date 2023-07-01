@@ -9,5 +9,6 @@ storage/
 storage_experiments/
 stable_versions/
 models - 06-Jun-Safe/
+models/
 *.bat
 Temp*
