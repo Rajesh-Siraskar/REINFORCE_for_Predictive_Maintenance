@@ -9,7 +9,7 @@ MIN_MODEL_PERFORMANCE = -1.0
 SB3_EPISODES = 10_000
 
 print ('\n ====== REINFORCE for Predictive Maintenance ======')
-print ('        V.4.3 01-Jul-2023 -- Look Ahead Factor -- do not apply when testing the model \n')
+print ('        V.4.3 01-Jul-2023 -- SS expts. Round col. added. Look Ahead Factor -- do not apply when testing the model \n')
 print ('- Loading packages...')
 from datetime import datetime
 import time
@@ -31,8 +31,10 @@ experiment_summary = []
 for n_tr_round in range(TRAINING_ROUNDS):
     # Auto experiment file structure
     print ('- Loading Experiments...')
-    df_expts = pd.read_csv('Experiments.csv')
+    df_expts = pd.read_csv('Experiments_SS.csv')
 
+    # Add round number column to Experiments files
+    df_expts['Round'] = n_tr_round
     # Initialize columns for recording model performance
     df_expts = add_performance_columns(df_expts)
     df_expts['model_file'] = 'Not satisfactory'
@@ -221,26 +223,26 @@ for n_tr_round in range(TRAINING_ROUNDS):
 
         x = [i for i in range(EPISODES)]
 
-        # ## Moving average for rewards
-        ma_window_size = 10
-        # # Convert error array to pandas series
-        rewards = pd.Series(rewards_history)
-        windows = rewards.rolling(ma_window_size)
-        moving_avg = windows.mean()
-        moving_avg_lst = moving_avg.tolist()
-        y1 = rewards
-        y2 = moving_avg_lst
-
-        filename = f'{RESULTS_FOLDER}/{VERSION}_Avg_episode_rewards.png'
-        two_variable_plot(x, y1, y2, 'Avg. rewards per episode', VERSION, 'Episode', 'Avg. Rewards', 'Moving Avg.', 50, filename)
-
-        # plot_error_bounds(x, y1)
-
-        filename = f'{RESULTS_FOLDER}/{VERSION}_Episode_Length.png'
-        single_axes_plot(x, env.ep_length_history, 'Episode length', VERSION, 'Episode', 'No of milling operations', 50, 0.0, filename)
-
-        filename = f'{RESULTS_FOLDER}/{VERSION}_Tool_Replacements.png'
-        single_axes_plot(x, env.ep_tool_replaced_history, 'Tool replacements per episode', VERSION, 'Episode', 'Replacements', 50, 0.0, filename)
+        # # ## Moving average for rewards
+        # ma_window_size = 10
+        # # # Convert error array to pandas series
+        # rewards = pd.Series(rewards_history)
+        # windows = rewards.rolling(ma_window_size)
+        # moving_avg = windows.mean()
+        # moving_avg_lst = moving_avg.tolist()
+        # y1 = rewards
+        # y2 = moving_avg_lst
+        #
+        # filename = f'{RESULTS_FOLDER}/{VERSION}_Avg_episode_rewards.png'
+        # two_variable_plot(x, y1, y2, 'Avg. rewards per episode', VERSION, 'Episode', 'Avg. Rewards', 'Moving Avg.', 50, filename)
+        #
+        # # plot_error_bounds(x, y1)
+        #
+        # filename = f'{RESULTS_FOLDER}/{VERSION}_Episode_Length.png'
+        # single_axes_plot(x, env.ep_length_history, 'Episode length', VERSION, 'Episode', 'No of milling operations', 50, 0.0, filename)
+        #
+        # filename = f'{RESULTS_FOLDER}/{VERSION}_Tool_Replacements.png'
+        # single_axes_plot(x, env.ep_tool_replaced_history, 'Tool replacements per episode', VERSION, 'Episode', 'Replacements', 50, 0.0, filename)
 
         # ### Generate a balanced test set
         idx_replace_cases = df_test.index[df_test['ACTION_CODE'] >= 1.0]
@@ -320,7 +322,7 @@ for n_tr_round in range(TRAINING_ROUNDS):
                 print(f'- Save Stable-Baselines-3 model')
                 model_file_SB = f'models/{VERSION}_{SB_ALGO}_{dt_m}.mdl'
                 agent_SB.save(model_file_SB)
-             
+
             n = 0
             for agent_SB in SB_agents:
                 print(f'- Testing Stable-Baselines-3 {agent_SB} model...')
@@ -406,10 +408,10 @@ print('\n\n FINAL PROCESSING of all experiment reports\n')
 import glob
 
 # For multi-training round - stability test experiments
-PATH = './results/MultiRound'
+PATH = './results/MRL2'
 EXPT_REPORTS = f'{PATH}/Experiment_Results_*.csv'
-CONCAT_REPORT = f'{PATH}/Concat_Experiments.csv'
-CONSOLIDATED_PERFORMANCE_REPORT = f'{PATH}/Consolidated_Experiments_Summary.csv'
+CONCAT_REPORT = f'{PATH}/Concat_Experiments_SS.csv'
+CONSOLIDATED_PERFORMANCE_REPORT = f'{PATH}/Consolidated_Experiments_Summary_SS.csv'
 
 report_files = glob.glob(EXPT_REPORTS)
 
@@ -439,7 +441,7 @@ envs = df_report.environment_info.unique()
 overall = envs[0:]
 simulated_envs = envs[0:3]
 phm_ss_envs = envs[3:12]
-phm_ms_envs = envs[12:]
+# phm_ms_envs = envs[12:]
 
 overall_metrics = algo_metrics.loc[overall]
 overall_means = overall_metrics.mean()
@@ -459,9 +461,9 @@ phm_ss_means = phm_ss_means.sort_index(ascending=True)
 file = f'{PATH}/R2-phm_ss_means.csv'
 phm_ss_means.to_csv(file)
 
-phm_ms_metrics = algo_metrics.loc[phm_ms_envs]
-phm_ms_means = phm_ms_metrics.mean()
-phm_ms_means = phm_ms_means.sort_index(ascending=True)
-file = f'{PATH}/R2-phm_ms_means.csv'
-phm_ms_means.to_csv(file)
+# phm_ms_metrics = algo_metrics.loc[phm_ms_envs]
+# phm_ms_means = phm_ms_metrics.mean()
+# phm_ms_means = phm_ms_means.sort_index(ascending=True)
+# file = f'{PATH}/R2-phm_ms_means.csv'
+# phm_ms_means.to_csv(file)
 print('* Done. Epxeriment files summarized and environment level metrics computed')

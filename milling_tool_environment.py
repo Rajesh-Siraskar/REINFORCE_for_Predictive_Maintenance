@@ -43,7 +43,7 @@ class MillingTool_SS_NT(gym.Env):
     metadata = {"render.modes": ["human"]}
 
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
-        print(f'** -- Single-variate env. wear_threshold: {wear_threshold} R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
+        print(f'** -- Single-variate env. wear_threshold: {wear_threshold:.4f} R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
         # Machine data frame properties
         self.df = df
@@ -185,7 +185,7 @@ class MillingTool_MS_V3(gym.Env):
     metadata = {"render.modes": ["human"]}
 
     def __init__(self, df, wear_threshold, max_operations, add_noise, breakdown_chance, R1=1.0, R2=-1.0, R3=-100.0):
-        print(f'** -- Multi-variate state V3 env. wear_threshold: {wear_threshold} R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
+        print(f'** -- Multi-variate state V3 env. wear_threshold: {wear_threshold:.4f} R1: {R1}, R2: {R2}, R3: {R3}. Noise: {add_noise}. Break-down chance: {breakdown_chance} -- **')
 
         # Machine data frame properties
         self.df = df

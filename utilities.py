@@ -301,6 +301,7 @@ def plot_learning_curve(x, rewards_history, loss_history, moving_avg_n, filename
     ax2.yaxis.set_label_position('right')
     ax2.tick_params(axis='y', colors='C1')
     plt.savefig(filename)
+    plt.close()
     ### plt.show()
 
 def single_axes_plot(x, y, title='', subtitle='', x_label='', y_label='', xticks=0, threshold=0.0, filename='plot.png'):
@@ -326,6 +327,7 @@ def single_axes_plot(x, y, title='', subtitle='', x_label='', y_label='', xticks
     # plt.title(subtitle)
     fig.tight_layout()
     plt.savefig(filename)
+    plt.close()
     ### plt.show()
 
 def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, filename='plot.png'):
@@ -349,6 +351,7 @@ def two_variable_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='',
 
     fig.tight_layout()
     plt.savefig(filename)
+    plt.close()
     ### plt.show()
 
 def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_label='', xticks=0, file='Wear_Plot.png', threshold_org=0.0, threshold=0.0,):
@@ -383,6 +386,7 @@ def two_axes_plot(x, y1, y2, title='', subtitle='', x_label='', y1_label='', y2_
     ax2.set_title(title, fontsize=18)
     fig.tight_layout()
     plt.savefig(file)
+    plt.close()
     ### plt.show()
 
 def plot_error_bounds(x, y):
@@ -398,6 +402,7 @@ def plot_error_bounds(x, y):
     fill = plt.fill_between(x, y-sd, y+sd, color='b', alpha=0.2)
     plt.margins(x=0)
     plt.legend(['Rewards'])
+    plt.close()
     ### plt.show()
 
 # # DOWN SAMPLE HIGH RES DATA
