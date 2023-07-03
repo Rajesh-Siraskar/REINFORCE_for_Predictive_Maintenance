@@ -1,0 +1,12 @@
+3_3_PHM_C01_SS_NoNBD_
+Date,Time,Environment,Noise,Breakdown_chance,Train_data,env.R1,env.R2,env.R3,Wear threshold,Look-ahead Factor,Episodes,Terminate on,Test_info,Test_cases,Metrics_method,Version
+01-Jul-2023,16:25:53,PHM C01 SS NBD-SS,None,0.0,data\PHM_Tool_Wear_Data_C01_0p12.csv,1,-2,-40,0.12,0.95,800,348,Separate test set.,40,binary,3_3_PHM_C01_SS_NoNBD_
+
+,Precision,Precision,Recall,Recall,F_Beta_0_5,F_Beta_0_5,F_Beta_0_75,F_Beta_0_75,F_1_Score,F_1_Score,Normal_error,Replace_error,Overall_error
+,mean,std,mean,std,mean,std,mean,std,mean,std,mean,mean,mean
+Algorithm,,,,,,,,,,,,,
+A2C,0.5054,0.0758,0.495,0.0956,0.5021,0.0755,0.4999,0.0769,0.4983,0.0793,0.485,0.505,0.495
+DQN,0.4922,0.0067,0.965,0.0337,0.5457,0.0086,0.5976,0.0107,0.6519,0.0133,0.995,0.035,0.515
+PPO,0.5262,0.0579,0.61,0.0876,0.5397,0.0548,0.5514,0.0552,0.5626,0.0582,0.555,0.39,0.4725
+REINFORCE,0.6161,0.0232,1.0,0.0,0.6673,0.0217,0.7148,0.0198,0.7623,0.0175,0.625,0.0,0.3125
+

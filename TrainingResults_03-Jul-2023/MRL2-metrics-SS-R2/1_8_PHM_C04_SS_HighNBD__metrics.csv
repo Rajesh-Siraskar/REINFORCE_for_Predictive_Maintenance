@@ -1,0 +1,12 @@
+1_8_PHM_C04_SS_HighNBD_
+Date,Time,Environment,Noise,Breakdown_chance,Train_data,env.R1,env.R2,env.R3,Wear threshold,Look-ahead Factor,Episodes,Terminate on,Test_info,Test_cases,Metrics_method,Version
+02-Jul-2023,12:30:48,PHM C04 SS HBD-SS,0.01,0.1,data\PHM_Tool_Wear_Data_C04_0p098.csv,1,-1,-100,0.098,0.9,800,348,Separate test set.,40,binary,1_8_PHM_C04_SS_HighNBD_
+
+,Precision,Precision,Recall,Recall,F_Beta_0_5,F_Beta_0_5,F_Beta_0_75,F_Beta_0_75,F_1_Score,F_1_Score,Normal_error,Replace_error,Overall_error
+,mean,std,mean,std,mean,std,mean,std,mean,std,mean,mean,mean
+Algorithm,,,,,,,,,,,,,
+A2C,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.5
+DQN,0.0333,0.1054,0.005,0.0158,0.0156,0.0494,0.011,0.0347,0.0087,0.0275,0.03,0.995,0.5125
+PPO,0.4863,0.0505,0.595,0.0864,0.5039,0.0517,0.5191,0.0544,0.5335,0.0582,0.63,0.405,0.5175
+REINFORCE,0.5976,0.0949,0.41,0.0937,0.5439,0.0852,0.5088,0.0843,0.4824,0.0856,0.28,0.59,0.435
+
