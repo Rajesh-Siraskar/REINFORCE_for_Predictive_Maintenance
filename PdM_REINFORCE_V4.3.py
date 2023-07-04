@@ -4,12 +4,18 @@
 # Milling Tool Wear Maintenance Policy using the REINFORCE algorithm
 # V.3.0: Add cleaning up files. If the performance is not satisfactory -
 #           delete the files, also do not train and test SB models
+START_ROUND = 0
 TRAINING_ROUNDS = 5
+EXPTS_SETTINGS = 'Experiments_V7.csv'
 MIN_MODEL_PERFORMANCE = -1.0
 SB3_EPISODES = 10_000
 
 print ('\n ====== REINFORCE for Predictive Maintenance ======')
-print ('        V.4.3 01-Jul-2023 -- SS expts. Round col. added. Look Ahead Factor -- do not apply when testing the model \n')
+print ('        V.4.5 04-Jul-2023 -- Expts V7')
+print (120*'-')
+print (f'* Experiments file: {EXPTS_SETTINGS} -- Rounds {TRAINING_ROUNDS}')
+print (120*'=')
+
 print ('- Loading packages...')
 from datetime import datetime
 import time
@@ -28,10 +34,10 @@ from reinforce_classes import PolicyNetwork, Agent
 
 experiment_summary = []
 
-for n_tr_round in range(TRAINING_ROUNDS):
+for n_tr_round in range(START_ROUND, TRAINING_ROUNDS):
     # Auto experiment file structure
     print ('- Loading Experiments...')
-    df_expts = pd.read_csv('Experiments_SS.csv')
+    df_expts = pd.read_csv(EXPTS_SETTINGS)
 
     # Add round number column to Experiments files
     df_expts['Round'] = n_tr_round
@@ -152,12 +158,12 @@ for n_tr_round in range(TRAINING_ROUNDS):
             print(f'* Separate test data provided: {TEST_FILE} - ({len(df_test.index)} records).')
 
         n_records = len(df_train.index)
-        # x = [n for n in range(n_records)]
-        # y1 = df_train['tool_wear']
-        # y2 = df_train['ACTION_CODE']
-        # wear_plot = f'{RESULTS_FOLDER}/{VERSION}_wear_plot.png'
-        # title=f'Tool Wear (mm) data\n{VERSION}'
-        # two_axes_plot(x, y1, y2, title=title, x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, file=wear_plot, threshold_org = WEAR_THRESHOLD_ORG_NORMALIZED, threshold=WEAR_THRESHOLD_NORMALIZED)
+        x = [n for n in range(n_records)]
+        y1 = df_train['tool_wear']
+        y2 = df_train['ACTION_CODE']
+        wear_plot = f'{RESULTS_FOLDER}/{VERSION}_wear_plot.png'
+        title=f'Tool Wear (mm) data\n{VERSION}'
+        two_axes_plot(x, y1, y2, title=title, x_label='Time', y1_label='Tool Wear (mm)', y2_label='Action code (1=Replace)', xticks=20, file=wear_plot, threshold_org = WEAR_THRESHOLD_ORG_NORMALIZED, threshold=WEAR_THRESHOLD_NORMALIZED)
 
 
         # ## Milling Tool Environment -

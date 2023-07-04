@@ -1,0 +1,4 @@
+expt_n,environment,environment_info,data_file,Model_name,R1,R2,R3,wear_threshold,threshold_factor,add_noise,breakdown_chance,episodes,milling_operations_max,version_prefix,test_info,test_cases,test_rounds,results_folder,test_file,train_sample_rate,test_sample_rate
+0,SS,Simulated NBD,data\Simulated_Dasic_2006_Tool_Wear_Model_Train.csv,RF_Model_Dasic_NoNBD.mdl,1,-1,-100,0.25,0.95,0,0,800,121,Dasic,Separate test set.,40,10,results/MRL2_Dasic,data\Simulated_Dasic_2006_Tool_Wear_Model_Test.csv,1,2
+1,SS,Simulated LBD,data\Simulated_Dasic_2006_Tool_Wear_Model_Train.csv,RF_Model_Dasic_LowNBD.mdl,1,-1,-100,0.25,0.95,1000,0.05,800,121,Dasic,Separate test set.,40,10,results/MRL2_Dasic,data\Simulated_Dasic_2006_Tool_Wear_Model_Test.csv,1,2
+2,SS,Simulated HBD,data\Simulated_Dasic_2006_Tool_Wear_Model_Train.csv,RF_Model_Dasic_HighNBD.mdl,1,-1,-100,0.25,0.95,100,0.1,800,121,Dasic,Separate test set.,40,10,results/MRL2_Dasic,data\Simulated_Dasic_2006_Tool_Wear_Model_Test.csv,1,2

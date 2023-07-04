@@ -1,7 +1,7 @@
 rem Run python code to conduct experiments
 echo off
 echo -------------------------------------------------------------------------------------
-echo   V.4.3 -- Env. test - no longer uses same look-ahead. Use original wear threshold
+echo   V.4.4 -- Rounds continue logic. Env. test - no longer uses same look-ahead. Use original wear threshold
 echo -------------------------------------------------------------------------------------
 echo(
 set pydir=D:\Rajesh\ResearchLab\REINFORCE\REINFORCE_for_Predictive_Maintenance
