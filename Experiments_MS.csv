@@ -1,4 +1,0 @@
-expt_n,environment,environment_info,data_file,Model_name,R1,R2,R3,wear_threshold,threshold_factor,add_noise,breakdown_chance,episodes,milling_operations_max,version_prefix,test_info,test_cases,test_rounds,results_folder,test_file,train_sample_rate,test_sample_rate
-0,MS,PHM C01 MS NBD,data\PHM_Tool_Wear_Data_C01_0p12.csv,RF_Model_PHM_C01_MS_NoNBD.mdl,0.5,-1,-40,0.12,0.9,0,0,1000,348,PHM_C01_MS,Separate test set.,40,10,results/MRL2,,100,70
-1,MS,PHM C04 MS NBD,data\PHM_Tool_Wear_Data_C04_0p098.csv,RF_Model_PHM_C04_MS_NoNBD.mdl,0.5,-1,-40,0.098,0.9,0,0,1000,348,PHM_C04_MS,Separate test set.,40,10,results/MRL2,,100,70
-2,MS,PHM C06 MS NBD,data\PHM_Tool_Wear_Data_C06_0p13.csv,RF_Model_PHM_C06_MS_NoNBD.mdl,0.5,-1,-40,0.13,0.9,0,0,1000,348,PHM_C06_MS,Separate test set.,40,10,results/MRL2,,100,70
